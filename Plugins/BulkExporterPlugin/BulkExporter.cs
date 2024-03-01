@@ -11,52 +11,15 @@ using Frosty.Core.Windows;
 using Frosty.Core;
 using System.Windows.Media;
 using FrostySdk;
+using System.ComponentModel;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace BulkExporterPlugin
 {
-    public class BulkExportCommand : ICommand
-    {
-        public bool CanExecute(object parameter)
-        {
-            return true;
-        }
-
-#pragma warning disable 67
-        public event EventHandler CanExecuteChanged;
-#pragma warning restore 67
-
-        public void Execute(object parameter)
-        {
-            if (parameter is FrameworkElement param && param.Tag is BulkExporter explorer)
-            {
-                explorer.ExportChunk();
-            }
-        }
-    }
-    public class RightClickCommand : ICommand
-    {
-        public bool CanExecute(object parameter)
-        {
-            return true;
-        }
-
-#pragma warning disable 67
-        public event EventHandler CanExecuteChanged;
-#pragma warning restore 67
-
-        public void Execute(object parameter)
-        {
-            if (parameter is ListBoxItem lbi)
-                lbi.IsSelected = true;
-        }
-    }
-
-    [TemplatePart(Name = PART_ChunksListBox, Type = typeof(ListBox))]
-    [TemplatePart(Name = PART_ResExplorer, Type = typeof(FrostyDataExplorer))]
-    [TemplatePart(Name = PART_ResExportMenuItem, Type = typeof(MenuItem))]
-    [TemplatePart(Name = PART_ResImportMenuItem, Type = typeof(MenuItem))]
-    [TemplatePart(Name = PART_RevertMenuItem, Type = typeof(MenuItem))]
-    [TemplatePart(Name = PART_ChunkFilter, Type = typeof(TextBox))]
+    [TemplatePart(Name = PART_AssetTreeView, Type = typeof(TreeView))]
+    [TemplatePart(Name = PART_DataExplorer, Type = typeof(FrostyDataExplorer))]
+    [TemplatePart(Name = PART_AssetFilter, Type = typeof(TextBox))]
     [TemplatePart(Name = PART_Flatten, Type = typeof(CheckBox))]
     [TemplatePart(Name = PART_Mesh, Type = typeof(CheckBox))]
     [TemplatePart(Name = PART_Texture, Type = typeof(CheckBox))]
@@ -65,21 +28,17 @@ namespace BulkExporterPlugin
     {
         public override ImageSource Icon => BulkExporterMenuExtension.imageSource;
 
-        private const string PART_ChunksListBox = "PART_ChunksListBox";
-        private const string PART_ResExplorer = "PART_ResExplorer";
-        private const string PART_ResExportMenuItem = "PART_ResExportMenuItem";
-        private const string PART_ResImportMenuItem = "PART_ResImportMenuItem";
-        private const string PART_RevertMenuItem = "PART_RevertMenuItem";
-        private const string PART_ChunkFilter = "PART_ChunkFilter";
+        private const string PART_AssetTreeView = "PART_AssetTreeView";
+        private const string PART_DataExplorer = "PART_DataExplorer";
+        private const string PART_AssetFilter = "PART_AssetFilter";
         private const string PART_Flatten = "PART_Flatten";
         private const string PART_Texture = "PART_Texture";
         private const string PART_Mesh = "PART_Mesh";
         private const string PART_ExportButton = "PART_ExportButton";
 
-        private ListBox chunksListBox;
-        private FrostyDataExplorer resExplorer;
-        private TextBox chunkFilterTextBox;
-        //private CheckBox chunkModifiedBox;
+        private TreeView AssetTreeView;
+        private FrostyDataExplorer dataExplorer;
+        private TextBox assetFilterTextBox;
         private CheckBox flattenCheck;
         private CheckBox meshCheck;
         private CheckBox textureCheck;
@@ -100,36 +59,63 @@ namespace BulkExporterPlugin
         {
             base.OnApplyTemplate();
 
-            chunksListBox = GetTemplateChild(PART_ChunksListBox) as ListBox;
-            resExplorer = GetTemplateChild(PART_ResExplorer) as FrostyDataExplorer;
-            chunkFilterTextBox = GetTemplateChild(PART_ChunkFilter) as TextBox;
-            //chunkModifiedBox = GetTemplateChild(PART_Mesh) as CheckBox;
-
+            AssetTreeView = GetTemplateChild(PART_AssetTreeView) as TreeView;
+            dataExplorer = GetTemplateChild(PART_DataExplorer) as FrostyDataExplorer;
+            assetFilterTextBox = GetTemplateChild(PART_AssetFilter) as TextBox;
             flattenCheck = GetTemplateChild(PART_Flatten) as CheckBox;
             meshCheck = GetTemplateChild(PART_Mesh) as CheckBox;
             textureCheck = GetTemplateChild(PART_Texture) as CheckBox;
             exportButton = GetTemplateChild(PART_ExportButton) as Button;
             exportButton.Click += ExportButton_Click;
 
-            resExplorer.SelectionChanged += ResExplorer_SelectionChanged;
-            MenuItem mi = GetTemplateChild(PART_ResExportMenuItem) as MenuItem;
-            mi.Click += ResExportMenuItem_Click;
+            dataExplorer.SelectionChanged += ResExplorer_SelectionChanged;
 
-            Loaded += FrostyChunkResEditor_Loaded;
-            chunksListBox.SelectionChanged += ChunksListBox_SelectionChanged;
-            chunkFilterTextBox.LostFocus += ChunkFilterTextBox_LostFocus;
-            chunkFilterTextBox.KeyUp += ChunkFilterTextBox_KeyUp;
-            //chunkModifiedBox.Checked += ChunkFilterTextBox_LostFocus;
-            //chunkModifiedBox.Unchecked += ChunkFilterTextBox_LostFocus;
+            Loaded += BulkExporter_Loaded;
+            assetFilterTextBox.LostFocus += AssetFilterTextBox_LostFocus;
+            assetFilterTextBox.KeyUp += AssetFilterTextBox_KeyUp;
+        }
+        private void BulkExporter_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (dataExplorer.ItemsSource != null)
+                return;
+
+            dataExplorer.ItemsSource = App.AssetManager.EnumerateEbx();
+            UpdateTreeView();
         }
 
         public void ExportButton_Click(object sender, RoutedEventArgs e)
         {
             logger.Log("Export Clicked");
+
+
+            //ResAssetEntry selectedAsset = resExplorer.SelectedAsset as ResAssetEntry;
+            //FrostySaveFileDialog sfd = new FrostySaveFileDialog("Save Resource", "*.res (Resource Files)|*.res", "Res", selectedAsset.Filename);
+
+            //Stream resStream = App.AssetManager.GetRes(selectedAsset);
+            //if (resStream == null)
+            //    return;
+
+            //if (sfd.ShowDialog())
+            //{
+            //    FrostyTaskWindow.Show("Exporting Asset", "", (task) =>
+            //    {
+            //        using (NativeWriter writer = new NativeWriter(new FileStream(sfd.FileName, FileMode.Create)))
+            //        {
+            //            // write res meta first
+            //            writer.Write(selectedAsset.ResMeta);
+
+            //            // followed by remaining data
+            //            using (NativeReader reader = new NativeReader(resStream))
+            //                writer.Write(reader.ReadToEnd());
+            //        }
+            //    });
+            //    logger?.Log("Resource saved to {0}", sfd.FileName);
+            //}
         }
 
         private void ResExplorer_SelectionChanged(object sender, RoutedEventArgs e)
         {
+            logger.Log("Selection Changed");
             //if (resExplorer.SelectedAsset != null)
             //{
             //    resBundleBox.Items.Clear();
@@ -155,142 +141,131 @@ namespace BulkExporterPlugin
             //}
         }
 
-        private void ChunksListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            //if (chunksListBox.SelectedIndex != -1)
-            //{
-            //    chunksBundleBox.Items.Clear();
-            //    ChunkAssetEntry SelectedChk = (ChunkAssetEntry)chunksListBox.SelectedItem;
-            //    string FirstLine = "Selected chunk is in Bundles: ";
-            //    if (SelectedChk.FirstMip != -1)
-            //        FirstLine += " (FirstMip:" + SelectedChk.FirstMip + ")";
-            //    if (App.FileSystem.GetManifestChunk(SelectedChk.Id) != null)
-            //    {
-            //            chunksBundleBox.Items.Add("Selected chunk is a Manifest chunk.");
-            //    }
-            //    else if (SelectedChk.Bundles.Count == 0 && SelectedChk.AddedBundles.Count == 0)
-            //    {
-            //        chunksBundleBox.Items.Add("Selected chunk is only in SuperBundles.");
-            //    }
-            //    if (SelectedChk.Bundles.Count != 0)
-            //    {
-            //        chunksBundleBox.Items.Add(FirstLine);
-            //        foreach (int bundle in SelectedChk.Bundles)
-            //        {
-            //            chunksBundleBox.Items.Add(App.AssetManager.GetBundleEntry(bundle).Name);
-            //        }
-            //    }
-            //    if (SelectedChk.AddedBundles.Count != 0)
-            //    {
-            //        chunksBundleBox.Items.Add("Added to Bundles:");
-            //        foreach (int bundle in SelectedChk.AddedBundles)
-            //        {
-            //            chunksBundleBox.Items.Add(App.AssetManager.GetBundleEntry(bundle).Name);
-            //        }
-            //    }
-            //}
-            //else
-            //{
-            //    chunksBundleBox.Items.Clear();
-            //    chunksBundleBox.Items.Add("No chunk selected");
-            //}
-        }
-
-        private void ChunkFilterTextBox_KeyUp(object sender, KeyEventArgs e)
+        private void AssetFilterTextBox_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
                 UpdateFilter();
         }
 
-        private void ChunkFilterTextBox_LostFocus(object sender, RoutedEventArgs e)
+        private void AssetFilterTextBox_LostFocus(object sender, RoutedEventArgs e)
         {
             UpdateFilter();
         }
 
         private void UpdateFilter()
         {
-            if (chunkFilterTextBox.Text == "" /*& chunkModifiedBox.IsChecked == false*/)
-            {
-                chunksListBox.Items.Filter = null;
-                return;
-            }
-            else if (chunkFilterTextBox.Text != "" /*& chunkModifiedBox.IsChecked == false*/)
-            {
-                chunksListBox.Items.Filter = new Predicate<object>((object a) => ((ChunkAssetEntry)a).Id.ToString().Contains(chunkFilterTextBox.Text.ToLower()));
-            }
-            else if (chunkFilterTextBox.Text == "" /*& chunkModifiedBox.IsChecked == true*/)
-            {
-                chunksListBox.Items.Filter = new Predicate<object>((object a) => ((ChunkAssetEntry)a).IsModified);
-            }
-            else if (chunkFilterTextBox.Text != "" /*& chunkModifiedBox.IsChecked == true*/)
-            {
-                chunksListBox.Items.Filter = new Predicate<object>((object a) => (((ChunkAssetEntry)a).IsModified) & ((ChunkAssetEntry)a).Id.ToString().Contains(chunkFilterTextBox.Text.ToLower()));
-            }
+            //if (assetFilterTextBox.Text == "" && meshCheck.IsChecked == false && textureCheck.IsChecked == false)
+            //{
+            //    chunksListBox.Items.Filter = null;
+            //    return;
+            //}
+            //else if (assetFilterTextBox.Text != "" && meshCheck.IsChecked == false && textureCheck.IsChecked == false)
+            //{
+            //    chunksListBox.Items.Filter = new Predicate<object>((object a) => ((ChunkAssetEntry)a).Id.ToString().Contains(assetFilterTextBox.Text.ToLower()));
+            //}
+            //else if (assetFilterTextBox.Text == "" && meshCheck.IsChecked == false && textureCheck.IsChecked == false)
+            //{
+            //    chunksListBox.Items.Filter = new Predicate<object>((object a) => ((ChunkAssetEntry)a).IsModified);
+            //}
+            //else if (assetFilterTextBox.Text != "" && meshCheck.IsChecked == false && textureCheck.IsChecked == false)
+            //{
+            //    chunksListBox.Items.Filter = new Predicate<object>((object a) => (((ChunkAssetEntry)a).IsModified) & ((ChunkAssetEntry)a).Id.ToString().Contains(assetFilterTextBox.Text.ToLower()));
+            //}
         }
 
-        private void ResExportMenuItem_Click(object sender, RoutedEventArgs e)
+        private Dictionary<string, AssetPath> assetPathMapping = new Dictionary<string, AssetPath>(StringComparer.OrdinalIgnoreCase);
+
+        private void UpdateTreeView()
         {
-            ResAssetEntry selectedAsset = resExplorer.SelectedAsset as ResAssetEntry;
-            FrostySaveFileDialog sfd = new FrostySaveFileDialog("Save Resource", "*.res (Resource Files)|*.res", "Res", selectedAsset.Filename);
+            var ItemsSource = App.AssetManager.EnumerateEbx();
 
-            Stream resStream = App.AssetManager.GetRes(selectedAsset);
-            if (resStream == null)
-                return;
-
-            if (sfd.ShowDialog())
+            AssetPath root = new AssetPath("", "", null);
+            foreach (AssetEntry entry in ItemsSource)
             {
-                FrostyTaskWindow.Show("Exporting Asset", "", (task) =>
+                //if (!FilterText(entry.Name, entry))
+                //    continue;
+
+                string[] arr = entry.Path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                AssetPath next = root;
+
+                foreach (string path in arr)
                 {
-                    using (NativeWriter writer = new NativeWriter(new FileStream(sfd.FileName, FileMode.Create)))
+                    bool bFound = false;
+                    foreach (AssetPath child in next.Children)
                     {
-                        // write res meta first
-                        writer.Write(selectedAsset.ResMeta);
+                        if (child.PathName.Equals(path, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (path.ToCharArray().Any(char.IsUpper))
+                                child.UpdatePathName(path);
 
-                        // followed by remaining data
-                        using (NativeReader reader = new NativeReader(resStream))
-                            writer.Write(reader.ReadToEnd());
+                            next = child;
+                            bFound = true;
+                            break;
+                        }
                     }
-                });
-                logger?.Log("Resource saved to {0}", sfd.FileName);
-            }
-        }
 
-        public void ExportChunk()
-        {
-            ChunkAssetEntry selectedAsset = chunksListBox.SelectedItem as ChunkAssetEntry;
-            FrostySaveFileDialog sfd = new FrostySaveFileDialog("Save Chunk", "*.chunk (Chunk Files)|*.chunk", "Chunk", selectedAsset.Filename);
-
-            Stream chunkStream = App.AssetManager.GetChunk(selectedAsset);
-            if (chunkStream == null)
-                return;
-
-            if (sfd.ShowDialog())
-            {
-                FrostyTaskWindow.Show("Exporting Chunk", "", (task) =>
-                {
-                    using (NativeWriter writer = new NativeWriter(new FileStream(sfd.FileName, FileMode.Create)))
+                    if (!bFound)
                     {
-                        using (NativeReader reader = new NativeReader(chunkStream))
-                            writer.Write(reader.ReadToEnd());
+                        string fullPath = next.FullPath + "/" + path;
+                        AssetPath newPath = null;
+
+                        if (!assetPathMapping.ContainsKey(fullPath))
+                        {
+                            newPath = new AssetPath(path, fullPath, next);
+                            assetPathMapping.Add(fullPath, newPath);
+                        }
+                        else
+                        {
+                            newPath = assetPathMapping[fullPath];
+                            newPath.Children.Clear();
+                        }
+
+                        next.Children.Add(newPath);
+                        next = newPath;
                     }
-                });
-                logger?.Log("Chunk saved to {0}", sfd.FileName);
+                }
             }
+
+            if (!assetPathMapping.ContainsKey("/"))
+                assetPathMapping.Add("/", new AssetPath("![root]", "", null, true));
+            root.Children.Insert(0, assetPathMapping["/"]);
+
+            AssetTreeView.ItemsSource = root.Children;
+            AssetTreeView.Items.SortDescriptions.Add(new SortDescription("PathName", ListSortDirection.Ascending));
+        }
+    }
+
+    internal class AssetPath
+    {
+        private static readonly ImageSource ClosedImage = new ImageSourceConverter().ConvertFromString("pack://application:,,,/FrostyEditor;component/Images/CloseFolder.png") as ImageSource;
+        private static readonly ImageSource OpenImage = new ImageSourceConverter().ConvertFromString("pack://application:,,,/FrostyEditor;component/Images/OpenFolder.png") as ImageSource;
+
+        public string DisplayName => PathName.Trim('!');
+        public string PathName { get; private set; }
+        public string FullPath { get; }
+        public AssetPath Parent { get; }
+        public List<AssetPath> Children { get; } = new List<AssetPath>();
+        public bool IsSelected { get; set; }
+        public bool IsRoot { get; }
+
+        public bool IsExpanded
+        {
+            get => expanded && Children.Count != 0;
+            set => expanded = value;
+        }
+        private bool expanded;
+
+        public AssetPath(string inName, string path, AssetPath inParent, bool bInRoot = false)
+        {
+            PathName = inName;
+            FullPath = path;
+            IsRoot = bInRoot;
+            Parent = inParent;
         }
 
-        private void FrostyChunkResEditor_Loaded(object sender, RoutedEventArgs e)
+        public void UpdatePathName(string newName)
         {
-            if (resExplorer.ItemsSource != null)
-                return;
-
-            resExplorer.ItemsSource = App.AssetManager.EnumerateRes();
-            chunksListBox.ItemsSource = App.AssetManager.EnumerateChunks();
-            chunksListBox.Items.SortDescriptions.Add(new System.ComponentModel.SortDescription("DisplayName", System.ComponentModel.ListSortDirection.Ascending));
-        }
-
-        private void RefreshChunksListBox(ChunkAssetEntry selectedAsset)
-        {
-            chunksListBox.Items.Refresh();
+            PathName = newName;
         }
     }
 }
