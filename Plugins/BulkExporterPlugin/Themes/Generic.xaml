@@ -17,10 +17,8 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type local:BulkExporter}">
                     <ControlTemplate.Resources>
-                        <local:FrostyChunkExportCommand x:Key="FrostyChunkExportCommand"/>
-                        <local:FrostyChunkImportCommand x:Key="FrostyChunkImportCommand"/>
-                        <local:FrostyChunkRevertCommand x:Key="FrostyChunkRevertCommand"/>
-                        <local:FrostyChunkRightClickCommand x:Key="FrostyChunkRightClickCommand"/>
+                        <local:BulkExportCommand x:Key="ExportCommand"/>
+                        <local:RightClickCommand x:Key="RightClickCommand"/>
                     </ControlTemplate.Resources>
                     <Grid Background="{StaticResource ControlBackground}">
                         <Grid Margin="2">
@@ -33,12 +31,41 @@
                                     <RowDefinition Height="26"/>
                                     <RowDefinition Height="26"/>
                                     <RowDefinition/>
-                                    <RowDefinition Height="175"/>
                                 </Grid.RowDefinitions>
                                 <DockPanel Grid.Row="0" LastChildFill="True" Background="{StaticResource ControlBackground}">
-                                    <CheckBox x:Name="PART_ChunkModified" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
-                                    <Label Content="Show only modified " Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
+                                    <CheckBox x:Name="PART_Flatten" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
+                                    <Label Content="Flatten" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
+
+                                    <CheckBox x:Name="PART_Texture" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
+                                    <Label Content="Export Textures" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
+
+                                    <CheckBox x:Name="PART_Mesh" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
+                                    <Label Content="Export Meshes" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
+
+                                    <Border Background="{StaticResource ControlBackground}"
+                                            Margin="1 0 0 0"
+                                            RenderOptions.EdgeMode="Aliased">
+                                        <StackPanel Orientation="Horizontal"
+                                                    Margin="6,2,6,2">
+                                            <Button x:Name="PART_ExportButton"
+                                                    Margin="0"
+                                                    ToolTip="Export selected files."
+                                                    IsEnabled="true">
+                                                <StackPanel Orientation="Horizontal"
+                                                            Margin="4 0 4 0">
+                                                    <Image Grid.Column="0"
+                                                           Source="pack://application:,,,/BulkExporterPlugin;component/Images/BulkExporter.png"
+                                                           Width="16" />
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="Bulk Export"
+                                                               VerticalAlignment="Center"
+                                                               Margin="4 0 0 0" />
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                    </Border>
                                 </DockPanel>
+
                                 <TextBox Grid.Row="1" x:Name="PART_ChunkFilter" BorderThickness="1" Margin="1" VerticalContentAlignment="Center"/>
 
                                 <ListBox Grid.Row="2" x:Name="PART_ChunksListBox" Tag="{Binding RelativeSource={RelativeSource AncestorType={x:Type local:BulkExporter}}}">
@@ -54,7 +81,7 @@
                                                     <ControlTemplate TargetType="{x:Type ListBoxItem}">
                                                         <Border x:Name="Bd" BorderBrush="Transparent" BorderThickness="0" Background="Transparent" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="True">
                                                             <Border.InputBindings>
-                                                                <MouseBinding Gesture="RightClick" Command="{StaticResource FrostyChunkRightClickCommand}">
+                                                                <MouseBinding Gesture="RightClick" Command="{StaticResource RightClickCommand}">
                                                                     <MouseBinding.CommandParameter>
                                                                         <Binding Path="." RelativeSource="{RelativeSource AncestorType={x:Type ListBoxItem}}"/>
                                                                     </MouseBinding.CommandParameter>
@@ -76,28 +103,12 @@
                                             <Setter Property="ContextMenu">
                                                 <Setter.Value>
                                                     <ContextMenu>
-                                                        <MenuItem Header="Export" Command="{StaticResource FrostyChunkExportCommand}">
+                                                        <MenuItem Header="Export" Command="{StaticResource ExportCommand}">
                                                             <MenuItem.CommandParameter>
                                                                 <Binding Path="PlacementTarget.Tag" RelativeSource="{RelativeSource AncestorType={x:Type ContextMenu}}"/>
                                                             </MenuItem.CommandParameter>
                                                             <MenuItem.Icon>
                                                                 <Image Source="/FrostyEditor;component/Images/Export.png" Opacity="0.5"/>
-                                                            </MenuItem.Icon>
-                                                        </MenuItem>
-                                                        <MenuItem Header="Import" Command="{StaticResource FrostyChunkImportCommand}">
-                                                            <MenuItem.CommandParameter>
-                                                                <Binding Path="PlacementTarget.Tag" RelativeSource="{RelativeSource AncestorType={x:Type ContextMenu}}"/>
-                                                            </MenuItem.CommandParameter>
-                                                            <MenuItem.Icon>
-                                                                <Image Source="/FrostyEditor;component/Images/Import.png" Opacity="0.5"/>
-                                                            </MenuItem.Icon>
-                                                        </MenuItem>
-                                                        <MenuItem Header="Revert" Command="{StaticResource FrostyChunkRevertCommand}">
-                                                            <MenuItem.CommandParameter>
-                                                                <Binding Path="PlacementTarget.Tag" RelativeSource="{RelativeSource AncestorType={x:Type ContextMenu}}"/>
-                                                            </MenuItem.CommandParameter>
-                                                            <MenuItem.Icon>
-                                                                <Image Source="/FrostyEditor;component/Images/Revert.png" Opacity="0.5"/>
                                                             </MenuItem.Icon>
                                                         </MenuItem>
                                                     </ContextMenu>
@@ -117,12 +128,6 @@
                                     </ListBox.ItemTemplate>
                                 </ListBox>
 
-                                <ListBox Grid.Row="3"
-                                         x:Name="PART_ChunksBundlesBox"
-                                         BorderThickness="2"
-                                         BorderBrush="{StaticResource ControlBackground}">
-                                </ListBox>
-
                             </Grid>
 
                             <GridSplitter Background="Transparent" VerticalAlignment="Stretch" Width="3" ResizeDirection="Columns"/>
@@ -130,7 +135,6 @@
                             <Grid Grid.Column="1" Background="{StaticResource WindowBackground}">
                                 <Grid.RowDefinitions>
                                     <RowDefinition/>
-                                    <RowDefinition Height="175"/>
                                 </Grid.RowDefinitions>
                                 <core:FrostyDataExplorer x:Name="PART_ResExplorer" Grid.Row="0">
                                     <core:FrostyDataExplorer.AssetContextMenu>
@@ -153,11 +157,6 @@
                                         </ContextMenu>
                                     </core:FrostyDataExplorer.AssetContextMenu>
                                 </core:FrostyDataExplorer>
-                                <ListBox Grid.Row="1"
-                                         x:Name="PART_ResBundlesBox"
-                                         BorderThickness="2"
-                                         BorderBrush="{StaticResource ControlBackground}">
-                                </ListBox>
                             </Grid>
 
                         </Grid>

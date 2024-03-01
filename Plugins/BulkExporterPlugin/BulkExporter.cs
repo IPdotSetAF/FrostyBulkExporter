@@ -14,7 +14,7 @@ using FrostySdk;
 
 namespace BulkExporterPlugin
 {
-    public class FrostyChunkExportCommand : ICommand
+    public class BulkExportCommand : ICommand
     {
         public bool CanExecute(object parameter)
         {
@@ -33,7 +33,7 @@ namespace BulkExporterPlugin
             }
         }
     }
-    public class FrostyChunkImportCommand : ICommand
+    public class RightClickCommand : ICommand
     {
         public bool CanExecute(object parameter)
         {
@@ -46,78 +46,44 @@ namespace BulkExporterPlugin
 
         public void Execute(object parameter)
         {
-            if (parameter is FrameworkElement param && param.Tag is BulkExporter explorer)
-            {
-                explorer.ImportChunk();
-            }
-        }
-    }
-    public class FrostyChunkRevertCommand : ICommand
-    {
-        public bool CanExecute(object parameter)
-        {
-            return true;
-        }
-
-#pragma warning disable 67
-        public event EventHandler CanExecuteChanged;
-#pragma warning restore 67
-
-        public void Execute(object parameter)
-        {
-            if (parameter is FrameworkElement param && param.Tag is BulkExporter explorer)
-            {
-                explorer.RevertChunk();
-            }
-        }
-    }
-    public class FrostyChunkRightClickCommand : ICommand
-    {
-        public bool CanExecute(object parameter)
-        {
-            return true;
-        }
-
-#pragma warning disable 67
-        public event EventHandler CanExecuteChanged;
-#pragma warning restore 67
-
-        public void Execute(object parameter)
-        {
-            if (parameter is ListBoxItem lbi) 
+            if (parameter is ListBoxItem lbi)
                 lbi.IsSelected = true;
         }
     }
 
     [TemplatePart(Name = PART_ChunksListBox, Type = typeof(ListBox))]
-    [TemplatePart(Name = PART_ChunksBundlesBox, Type = typeof(ListBox))]
     [TemplatePart(Name = PART_ResExplorer, Type = typeof(FrostyDataExplorer))]
-    [TemplatePart(Name = PART_ResBundlesBox, Type = typeof(ListBox))]
     [TemplatePart(Name = PART_ResExportMenuItem, Type = typeof(MenuItem))]
     [TemplatePart(Name = PART_ResImportMenuItem, Type = typeof(MenuItem))]
     [TemplatePart(Name = PART_RevertMenuItem, Type = typeof(MenuItem))]
     [TemplatePart(Name = PART_ChunkFilter, Type = typeof(TextBox))]
-    [TemplatePart(Name = PART_ChunkModified, Type = typeof(CheckBox))]
+    [TemplatePart(Name = PART_Flatten, Type = typeof(CheckBox))]
+    [TemplatePart(Name = PART_Mesh, Type = typeof(CheckBox))]
+    [TemplatePart(Name = PART_Texture, Type = typeof(CheckBox))]
+    [TemplatePart(Name = PART_ExportButton, Type = typeof(Button))]
     public class BulkExporter : FrostyBaseEditor
     {
         public override ImageSource Icon => BulkExporterMenuExtension.imageSource;
 
         private const string PART_ChunksListBox = "PART_ChunksListBox";
-        private const string PART_ChunksBundlesBox = "PART_ChunksBundlesBox";
         private const string PART_ResExplorer = "PART_ResExplorer";
-        private const string PART_ResBundlesBox = "PART_ResBundlesBox";
         private const string PART_ResExportMenuItem = "PART_ResExportMenuItem";
         private const string PART_ResImportMenuItem = "PART_ResImportMenuItem";
         private const string PART_RevertMenuItem = "PART_RevertMenuItem";
         private const string PART_ChunkFilter = "PART_ChunkFilter";
-        private const string PART_ChunkModified = "PART_ChunkModified";
+        private const string PART_Flatten = "PART_Flatten";
+        private const string PART_Texture = "PART_Texture";
+        private const string PART_Mesh = "PART_Mesh";
+        private const string PART_ExportButton = "PART_ExportButton";
 
         private ListBox chunksListBox;
-        private ListBox chunksBundleBox;
         private FrostyDataExplorer resExplorer;
-        private ListBox resBundleBox;
         private TextBox chunkFilterTextBox;
-        private CheckBox chunkModifiedBox;
+        //private CheckBox chunkModifiedBox;
+        private CheckBox flattenCheck;
+        private CheckBox meshCheck;
+        private CheckBox textureCheck;
+        private Button exportButton;
         private ILogger logger;
 
         static BulkExporter()
@@ -134,97 +100,100 @@ namespace BulkExporterPlugin
         {
             base.OnApplyTemplate();
 
-            chunksBundleBox = GetTemplateChild(PART_ChunksBundlesBox) as ListBox;
-            resBundleBox = GetTemplateChild(PART_ResBundlesBox) as ListBox;
             chunksListBox = GetTemplateChild(PART_ChunksListBox) as ListBox;
             resExplorer = GetTemplateChild(PART_ResExplorer) as FrostyDataExplorer;
             chunkFilterTextBox = GetTemplateChild(PART_ChunkFilter) as TextBox;
-            chunkModifiedBox = GetTemplateChild(PART_ChunkModified) as CheckBox;
+            //chunkModifiedBox = GetTemplateChild(PART_Mesh) as CheckBox;
+
+            flattenCheck = GetTemplateChild(PART_Flatten) as CheckBox;
+            meshCheck = GetTemplateChild(PART_Mesh) as CheckBox;
+            textureCheck = GetTemplateChild(PART_Texture) as CheckBox;
+            exportButton = GetTemplateChild(PART_ExportButton) as Button;
+            exportButton.Click += ExportButton_Click;
 
             resExplorer.SelectionChanged += ResExplorer_SelectionChanged;
             MenuItem mi = GetTemplateChild(PART_ResExportMenuItem) as MenuItem;
             mi.Click += ResExportMenuItem_Click;
 
-            mi = GetTemplateChild(PART_ResImportMenuItem) as MenuItem;
-            mi.Click += ResImportMenuItem_Click;
-
-            mi = GetTemplateChild(PART_RevertMenuItem) as MenuItem;
-            mi.Click += ResRevertMenuItem_Click;
-
             Loaded += FrostyChunkResEditor_Loaded;
             chunksListBox.SelectionChanged += ChunksListBox_SelectionChanged;
             chunkFilterTextBox.LostFocus += ChunkFilterTextBox_LostFocus;
             chunkFilterTextBox.KeyUp += ChunkFilterTextBox_KeyUp;
-            chunkModifiedBox.Checked += ChunkFilterTextBox_LostFocus;
-            chunkModifiedBox.Unchecked += ChunkFilterTextBox_LostFocus;
+            //chunkModifiedBox.Checked += ChunkFilterTextBox_LostFocus;
+            //chunkModifiedBox.Unchecked += ChunkFilterTextBox_LostFocus;
+        }
+
+        public void ExportButton_Click(object sender, RoutedEventArgs e)
+        {
+            logger.Log("Export Clicked");
         }
 
         private void ResExplorer_SelectionChanged(object sender, RoutedEventArgs e)
         {
-            if (resExplorer.SelectedAsset != null)
-            {
-                resBundleBox.Items.Clear();
-                ResAssetEntry SelectedRes = (ResAssetEntry)resExplorer.SelectedAsset;
-                resBundleBox.Items.Add("Selected resource is in Bundles: ");
-                foreach (int bundle in SelectedRes.Bundles)
-                {
-                    resBundleBox.Items.Add(App.AssetManager.GetBundleEntry(bundle).Name);
-                }
-                if (SelectedRes.AddedBundles.Count != 0)
-                {
-                    resBundleBox.Items.Add("Added to Bundles:");
-                    foreach (int bundle in SelectedRes.AddedBundles)
-                    {
-                        resBundleBox.Items.Add(App.AssetManager.GetBundleEntry(bundle).Name);
-                    }
-                }
-            }
-            else
-            {
-                resBundleBox.Items.Clear();
-                resBundleBox.Items.Add("No res selected");
-            }
+            //if (resExplorer.SelectedAsset != null)
+            //{
+            //    resBundleBox.Items.Clear();
+            //    ResAssetEntry SelectedRes = (ResAssetEntry)resExplorer.SelectedAsset;
+            //    resBundleBox.Items.Add("Selected resource is in Bundles: ");
+            //    foreach (int bundle in SelectedRes.Bundles)
+            //    {
+            //        resBundleBox.Items.Add(App.AssetManager.GetBundleEntry(bundle).Name);
+            //    }
+            //    if (SelectedRes.AddedBundles.Count != 0)
+            //    {
+            //        resBundleBox.Items.Add("Added to Bundles:");
+            //        foreach (int bundle in SelectedRes.AddedBundles)
+            //        {
+            //            resBundleBox.Items.Add(App.AssetManager.GetBundleEntry(bundle).Name);
+            //        }
+            //    }
+            //}
+            //else
+            //{
+            //    resBundleBox.Items.Clear();
+            //    resBundleBox.Items.Add("No res selected");
+            //}
         }
 
         private void ChunksListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (chunksListBox.SelectedIndex != -1)
-            {
-                chunksBundleBox.Items.Clear();
-                ChunkAssetEntry SelectedChk = (ChunkAssetEntry)chunksListBox.SelectedItem;
-                string FirstLine = "Selected chunk is in Bundles: ";
-                if (SelectedChk.FirstMip != -1)
-                    FirstLine += " (FirstMip:" + SelectedChk.FirstMip + ")";
-                if (App.FileSystem.GetManifestChunk(SelectedChk.Id) != null)
-                {
-                        chunksBundleBox.Items.Add("Selected chunk is a Manifest chunk.");
-                }
-                else if (SelectedChk.Bundles.Count == 0 && SelectedChk.AddedBundles.Count == 0)
-                {
-                    chunksBundleBox.Items.Add("Selected chunk is only in SuperBundles.");
-                }
-                if (SelectedChk.Bundles.Count != 0)
-                {
-                    chunksBundleBox.Items.Add(FirstLine);
-                    foreach (int bundle in SelectedChk.Bundles)
-                    {
-                        chunksBundleBox.Items.Add(App.AssetManager.GetBundleEntry(bundle).Name);
-                    }
-                }
-                if (SelectedChk.AddedBundles.Count != 0)
-                {
-                    chunksBundleBox.Items.Add("Added to Bundles:");
-                    foreach (int bundle in SelectedChk.AddedBundles)
-                    {
-                        chunksBundleBox.Items.Add(App.AssetManager.GetBundleEntry(bundle).Name);
-                    }
-                }
-            }
-            else
-            {
-                chunksBundleBox.Items.Clear();
-                chunksBundleBox.Items.Add("No chunk selected");
-            }
+            //if (chunksListBox.SelectedIndex != -1)
+            //{
+            //    chunksBundleBox.Items.Clear();
+            //    ChunkAssetEntry SelectedChk = (ChunkAssetEntry)chunksListBox.SelectedItem;
+            //    string FirstLine = "Selected chunk is in Bundles: ";
+            //    if (SelectedChk.FirstMip != -1)
+            //        FirstLine += " (FirstMip:" + SelectedChk.FirstMip + ")";
+            //    if (App.FileSystem.GetManifestChunk(SelectedChk.Id) != null)
+            //    {
+            //            chunksBundleBox.Items.Add("Selected chunk is a Manifest chunk.");
+            //    }
+            //    else if (SelectedChk.Bundles.Count == 0 && SelectedChk.AddedBundles.Count == 0)
+            //    {
+            //        chunksBundleBox.Items.Add("Selected chunk is only in SuperBundles.");
+            //    }
+            //    if (SelectedChk.Bundles.Count != 0)
+            //    {
+            //        chunksBundleBox.Items.Add(FirstLine);
+            //        foreach (int bundle in SelectedChk.Bundles)
+            //        {
+            //            chunksBundleBox.Items.Add(App.AssetManager.GetBundleEntry(bundle).Name);
+            //        }
+            //    }
+            //    if (SelectedChk.AddedBundles.Count != 0)
+            //    {
+            //        chunksBundleBox.Items.Add("Added to Bundles:");
+            //        foreach (int bundle in SelectedChk.AddedBundles)
+            //        {
+            //            chunksBundleBox.Items.Add(App.AssetManager.GetBundleEntry(bundle).Name);
+            //        }
+            //    }
+            //}
+            //else
+            //{
+            //    chunksBundleBox.Items.Clear();
+            //    chunksBundleBox.Items.Add("No chunk selected");
+            //}
         }
 
         private void ChunkFilterTextBox_KeyUp(object sender, KeyEventArgs e)
@@ -240,79 +209,22 @@ namespace BulkExporterPlugin
 
         private void UpdateFilter()
         {
-            if (chunkFilterTextBox.Text == "" & chunkModifiedBox.IsChecked == false)
+            if (chunkFilterTextBox.Text == "" /*& chunkModifiedBox.IsChecked == false*/)
             {
                 chunksListBox.Items.Filter = null;
                 return;
             }
-            else if (chunkFilterTextBox.Text != "" & chunkModifiedBox.IsChecked == false)
+            else if (chunkFilterTextBox.Text != "" /*& chunkModifiedBox.IsChecked == false*/)
             {
                 chunksListBox.Items.Filter = new Predicate<object>((object a) => ((ChunkAssetEntry)a).Id.ToString().Contains(chunkFilterTextBox.Text.ToLower()));
             }
-            else if (chunkFilterTextBox.Text == "" & chunkModifiedBox.IsChecked == true)
+            else if (chunkFilterTextBox.Text == "" /*& chunkModifiedBox.IsChecked == true*/)
             {
                 chunksListBox.Items.Filter = new Predicate<object>((object a) => ((ChunkAssetEntry)a).IsModified);
             }
-            else if (chunkFilterTextBox.Text != "" & chunkModifiedBox.IsChecked == true)
+            else if (chunkFilterTextBox.Text != "" /*& chunkModifiedBox.IsChecked == true*/)
             {
                 chunksListBox.Items.Filter = new Predicate<object>((object a) => (((ChunkAssetEntry)a).IsModified) & ((ChunkAssetEntry)a).Id.ToString().Contains(chunkFilterTextBox.Text.ToLower()));
-            }
-        }
-
-        private void ResRevertMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            if (!(resExplorer.SelectedAsset is ResAssetEntry selectedAsset) || !selectedAsset.IsModified)
-                return;
-
-            FrostyTaskWindow.Show("Reverting Asset", "", (task) => { App.AssetManager.RevertAsset(selectedAsset, suppressOnModify: false); });
-            resExplorer.RefreshItems();
-        }
-
-        private void ResImportMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            ResAssetEntry selectedAsset = resExplorer.SelectedAsset as ResAssetEntry;
-            FrostyOpenFileDialog ofd = new FrostyOpenFileDialog("Open Resource", "*.res (Resource Files)|*.res", "Res");
-
-            if (ofd.ShowDialog())
-            {
-                FrostyTaskWindow.Show("Importing Asset", "", (task) =>
-                {
-                    using (NativeReader reader = new NativeReader(new FileStream(ofd.FileName, FileMode.Open, FileAccess.Read)))
-                    {
-                        byte[] resMeta = reader.ReadBytes(0x10);
-                        byte[] buffer = reader.ReadToEnd();
-
-                        if (App.PluginManager.GetCustomHandler((ResourceType)selectedAsset.ResType) != null)
-                        {
-                            // @todo: throw some kind of error
-                        }
-
-                        // @todo
-                        //if (selectedAsset.ResType == (uint)ResourceType.ShaderBlockDepot)
-                        //{
-                        //    // treat manually imported shaderblocks as if every block has been modified
-
-                        //    ShaderBlockDepot sbd = new ShaderBlockDepot(resMeta);
-                        //    using (NativeReader subReader = new NativeReader(new MemoryStream(buffer)))
-                        //        sbd.Read(subReader, App.AssetManager, selectedAsset, null);
-
-                        //    for (int j = 0; j < sbd.ResourceCount; j++)
-                        //    {
-                        //        var sbr = sbd.GetResource(j);
-                        //        if (sbr is ShaderPersistentParamDbBlock || sbr is MeshParamDbBlock)
-                        //            sbr.IsModified = true;
-                        //    }
-
-                        //    App.AssetManager.ModifyRes(selectedAsset.Name, sbd);
-                        //}
-
-                        //else
-                        {
-                            App.AssetManager.ModifyRes(selectedAsset.Name, buffer, resMeta);
-                        }
-                    }
-                });
-                resExplorer.RefreshItems();
             }
         }
 
@@ -343,25 +255,6 @@ namespace BulkExporterPlugin
             }
         }
 
-        public void ImportChunk()
-        {
-            ChunkAssetEntry selectedAsset = chunksListBox.SelectedItem as ChunkAssetEntry;
-            FrostyOpenFileDialog ofd = new FrostyOpenFileDialog("Open Chunk", "*.chunk (Chunk Files)|*.chunk", "Chunk");
-
-            if (ofd.ShowDialog())
-            {
-                FrostyTaskWindow.Show("Importing Chunk", "", (task) =>
-                {
-                    using (NativeReader reader = new NativeReader(new FileStream(ofd.FileName, FileMode.Open, FileAccess.Read)))
-                    {
-                        byte[] buffer = reader.ReadToEnd();
-                        App.AssetManager.ModifyChunk(selectedAsset.Id, buffer);
-                    }
-                });
-                RefreshChunksListBox(selectedAsset);
-            }
-        }
-
         public void ExportChunk()
         {
             ChunkAssetEntry selectedAsset = chunksListBox.SelectedItem as ChunkAssetEntry;
@@ -383,16 +276,6 @@ namespace BulkExporterPlugin
                 });
                 logger?.Log("Chunk saved to {0}", sfd.FileName);
             }
-        }
-
-        public void RevertChunk()
-        {
-            ChunkAssetEntry selectedAsset = chunksListBox.SelectedItem as ChunkAssetEntry;
-            if (selectedAsset == null || !selectedAsset.IsModified)
-                return;
-
-            FrostyTaskWindow.Show("Reverting Chunk", "", (task) => { App.AssetManager.RevertAsset(selectedAsset, suppressOnModify: false); });
-            RefreshChunksListBox(selectedAsset);
         }
 
         private void FrostyChunkResEditor_Loaded(object sender, RoutedEventArgs e)
