@@ -95,6 +95,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FrostyCmd", "..\FrostyCmd\F
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DifficultyWeaponTableDataPlugin", "..\Plugins\DifficultyWeaponTableDataPlugin\DifficultyWeaponTableDataPlugin.csproj", "{F49314ED-C795-4A39-9748-68D936B35D2C}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BulkExporterPlugin", "..\Plugins\BulkExporterPlugin\BulkExporterPlugin.csproj", "{C5C5B426-0F3A-4042-B9C6-EC511F6EC897}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Developer - Debug|x64 = Developer - Debug|x64
@@ -524,6 +526,16 @@ Global
 		{F49314ED-C795-4A39-9748-68D936B35D2C}.Release - Final|x64.Build.0 = Release - Final|x64
 		{F49314ED-C795-4A39-9748-68D936B35D2C}.Release|x64.ActiveCfg = Release - Alpha|x64
 		{F49314ED-C795-4A39-9748-68D936B35D2C}.Release|x64.Build.0 = Release - Alpha|x64
+		{C5C5B426-0F3A-4042-B9C6-EC511F6EC897}.Developer - Debug|x64.ActiveCfg = Developer - Debug|x64
+		{C5C5B426-0F3A-4042-B9C6-EC511F6EC897}.Developer - Debug|x64.Build.0 = Developer - Debug|x64
+		{C5C5B426-0F3A-4042-B9C6-EC511F6EC897}.Release - Alpha|x64.ActiveCfg = Release - Alpha|x64
+		{C5C5B426-0F3A-4042-B9C6-EC511F6EC897}.Release - Alpha|x64.Build.0 = Release - Alpha|x64
+		{C5C5B426-0F3A-4042-B9C6-EC511F6EC897}.Release - Beta|x64.ActiveCfg = Release - Beta|x64
+		{C5C5B426-0F3A-4042-B9C6-EC511F6EC897}.Release - Beta|x64.Build.0 = Release - Beta|x64
+		{C5C5B426-0F3A-4042-B9C6-EC511F6EC897}.Release - Final|x64.ActiveCfg = Release - Final|x64
+		{C5C5B426-0F3A-4042-B9C6-EC511F6EC897}.Release - Final|x64.Build.0 = Release - Final|x64
+		{C5C5B426-0F3A-4042-B9C6-EC511F6EC897}.Release|x64.ActiveCfg = Release - Alpha|x64
+		{C5C5B426-0F3A-4042-B9C6-EC511F6EC897}.Release|x64.Build.0 = Release - Alpha|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -563,6 +575,7 @@ Global
 		{FE2D780C-8FBC-4797-9ACD-05DE2507F1AA} = {492048B6-848D-4675-A9BF-34A4751303F2}
 		{7F280BF3-F794-4715-9D32-770D36454B8C} = {492048B6-848D-4675-A9BF-34A4751303F2}
 		{F49314ED-C795-4A39-9748-68D936B35D2C} = {492048B6-848D-4675-A9BF-34A4751303F2}
+		{C5C5B426-0F3A-4042-B9C6-EC511F6EC897} = {492048B6-848D-4675-A9BF-34A4751303F2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C0B22EF1-4C3F-45B9-9F08-9793ED912199}
