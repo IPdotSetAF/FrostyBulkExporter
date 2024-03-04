@@ -11,6 +11,8 @@ namespace Frosty.Core
         {
         }
 
+        public virtual DataExplorerTargetContextMenu TargetContextMenu { get; } = DataExplorerTargetContextMenu.ASSET;
+
         /// <summary>
         /// When implemented in a derived class, gets the name of the tab item this extension will create.
         /// </summary>
@@ -25,5 +27,11 @@ namespace Frosty.Core
 
         public virtual RelayCommand ContextItemClicked { get; }
 
+    }
+
+    public enum DataExplorerTargetContextMenu
+    {
+        EXPLORER,
+        ASSET
     }
 }

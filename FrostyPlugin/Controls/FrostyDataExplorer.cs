@@ -207,6 +207,14 @@ namespace Frosty.Core.Controls
         }
         #endregion
 
+        #region -- ExplorerContextMenu --
+        public static readonly DependencyProperty ExplorerContextMenuProperty = DependencyProperty.Register("ExplorerContextMenu", typeof(ContextMenu), typeof(FrostyDataExplorer), new FrameworkPropertyMetadata(null));
+        public ContextMenu ExplorerContextMenu {
+            get => (ContextMenu)GetValue(ExplorerContextMenuProperty);
+            set => SetValue(ExplorerContextMenuProperty, value);
+        }
+        #endregion
+
         #region -- ToolbarVisible --
         public static readonly DependencyProperty ToolbarVisibleProperty = DependencyProperty.Register("ToolbarVisible", typeof(bool), typeof(FrostyDataExplorer), new FrameworkPropertyMetadata(true));
         public bool ToolbarVisible
