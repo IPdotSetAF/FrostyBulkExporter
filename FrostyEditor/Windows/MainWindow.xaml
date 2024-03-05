@@ -1112,6 +1112,10 @@
                                                 </MenuItem>
                                             </ContextMenu>
                                         </core:FrostyDataExplorer.AssetContextMenu>
+                                        <core:FrostyDataExplorer.ExplorerContextMenu>
+                                            <ContextMenu>
+                                            </ContextMenu>
+                                        </core:FrostyDataExplorer.ExplorerContextMenu>
                                     </core:FrostyDataExplorer>
                                 </Border>
                             </ctrl2:FrostyTabItem>
