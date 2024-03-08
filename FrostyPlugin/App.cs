@@ -15,6 +15,7 @@ namespace Frosty.Core
         public static FileSystem FileSystem;
         public static PluginManager PluginManager;
         public static EbxAssetEntry SelectedAsset;
+        public static string SelectedPath;
         public static string SelectedProfile;
         public static string SelectedPack;
         public static ILogger Logger;
