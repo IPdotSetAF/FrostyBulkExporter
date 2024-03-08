@@ -312,6 +312,7 @@ namespace Frosty.Core.Controls
         private AssetPath selectedPath;
         public event EventHandler<RoutedEventArgs> SelectedAssetDoubleClick;
         public event EventHandler<RoutedEventArgs> SelectionChanged;
+        public event EventHandler<RoutedEventArgs> PathSelectionChanged;
 
         private List<FilterData> filter = new List<FilterData>();
         private string prevFilterText = "";
@@ -358,6 +359,7 @@ namespace Frosty.Core.Controls
             assetListView = GetTemplateChild(PART_AssetListView) as ListView;
 
             assetTreeView.SelectedItemChanged += assetTreeView_SelectedItemChanged;
+            assetTreeView.PreviewMouseRightButtonDown += assetTreeView_PreviewMouseRightButtonDown;
             filterTextBox.KeyUp += FilterTextBox_KeyUp;
             filterTextBox.LostFocus += FilterTextBox_LostFocus;
             assetListView.SelectionChanged += assetListView_SelectionChanged;
@@ -528,6 +530,27 @@ namespace Frosty.Core.Controls
             SelectedPath = string.IsNullOrEmpty(selectedPath.FullPath) ? "" : selectedPath.FullPath.Remove(0, 1);
 
             UpdateListView(selectedPath);
+
+            PathSelectionChanged?.Invoke(this, new RoutedEventArgs());
+        }
+
+        private void assetTreeView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            TreeViewItem item = VisualUpwardSearch(e.OriginalSource as DependencyObject);
+
+            if(item != null)
+            {
+                item.Focus();
+                e.Handled = true;
+            }
+        }
+
+        private static TreeViewItem VisualUpwardSearch(DependencyObject source)
+        {
+            while (source != null && !(source is TreeViewItem))
+                source = VisualTreeHelper.GetParent(source);
+
+            return source as TreeViewItem;
         }
 
         private void ClearFilter()
