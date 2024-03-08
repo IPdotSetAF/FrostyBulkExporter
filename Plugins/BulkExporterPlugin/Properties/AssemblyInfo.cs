@@ -26,3 +26,4 @@ using System.Windows;
 [assembly: PluginVersion("1.0.0.0")]
 
 [assembly: RegisterMenuExtension(typeof(BulkExporterMenuExtension))]
+[assembly: RegisterDataExplorerContextMenu(typeof(BulkExportContextMenuItem))]

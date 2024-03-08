@@ -1,0 +1,49 @@
+﻿<ctrl:FrostyMessageBox x:Class="BulkExporterPlugin.Windows.BulkExportWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BulkExporterPlugin.Windows"
+        xmlns:ctrl="clr-namespace:Frosty.Controls;assembly=FrostyControls"
+        xmlns:core="clr-namespace:Frosty.Core.Controls;assembly=FrostyCore"
+        mc:Ignorable="d"
+        Title="Bulk Export" Height="100" Width="300" ResizeMode="NoResize" FrostyLoaded="FrostyMessageBox_FrostyLoaded" WindowStartupLocation="CenterScreen">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="auto"/>
+        </Grid.ColumnDefinitions>
+
+        <CheckBox Margin="0, 2, 0, 0" BorderThickness="1" Grid.Column="0" Grid.Row="0">Export Meshes</CheckBox>
+        <CheckBox Margin="0, 2, 0, 0" BorderThickness="1" Grid.Column="0" Grid.Row="1">Export Textures</CheckBox>
+
+        <Border Grid.Column="1" Grid.Row="2"  Background="{StaticResource ControlBackground}"
+        Margin="1 0 0 0"
+        RenderOptions.EdgeMode="Aliased">
+            <StackPanel Orientation="Horizontal"
+                Margin="6,2,6,2">
+                <Button x:Name="PART_ExportButton"
+                Margin="0"
+                ToolTip="Export selected files."
+                IsEnabled="true">
+                    <StackPanel Orientation="Horizontal"
+                        Margin="4 0 4 0">
+                        <Image Grid.Column="0"
+                       Source="pack://application:,,,/BulkExporterPlugin;component/Images/BulkExporter.png"
+                       Width="16" />
+                        <TextBlock Grid.Column="1"
+                           Text="Export"
+                           VerticalAlignment="Center"
+                           Margin="4 0 0 0" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Border>
+    </Grid>
+</ctrl:FrostyMessageBox>
