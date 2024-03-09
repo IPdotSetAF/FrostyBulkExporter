@@ -234,7 +234,11 @@ namespace FrostyEditor
                 if (contextItemExtension.TargetContextMenu == DataExplorerTargetContextMenu.ASSET)
                     dataExplorer.AssetContextMenu.Items.Add(contextMenuItem);
                 else
+                {
+                    if(dataExplorer.ExplorerContextMenu == null)
+                        dataExplorer.ExplorerContextMenu = new ContextMenu();
                     dataExplorer.ExplorerContextMenu.Items.Add(contextMenuItem);
+                }
             }
         }
 
