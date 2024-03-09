@@ -21,19 +21,50 @@ namespace BulkExporterPlugin.Windows
     /// </summary>
     public partial class BulkExportWindow : FrostyMessageBox
     {
-        private bool ExportMesh = false;
-        private bool ExportSkinnedMesh = false;
-        private bool ExportTexture = false;
-        private bool ExportAudio = false;
+        private bool _exportMesh = false;
+        public bool ExportMesh
+        {
+            get => _exportMesh;
+            set => _exportMesh = value;
+        }
+
+        private bool _exportSkinnedMesh = false;
+        public bool ExportSkinnedMesh
+        {
+            get => _exportSkinnedMesh;
+            set => _exportSkinnedMesh = value;
+        }
+
+        private bool _exportTexture = false;
+        public bool ExportTexture
+        {
+            get => _exportTexture;
+            set => _exportTexture = value;
+        }
+
+        private bool _exportAudio = false;
+        public bool ExportAudio
+        {
+            get => _exportAudio;
+            set => _exportAudio = value;
+        }
 
         public BulkExportWindow()
         {
             InitializeComponent();
+            DataContext = this;
         }
 
-        private void FrostyMessageBox_FrostyLoaded(object sender, EventArgs e)
+        private void ExportButton_Click(object sender, RoutedEventArgs e)
         {
+            DialogResult = true;
+            Close();
+        }
 
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
+            Close();
         }
     }
 }
