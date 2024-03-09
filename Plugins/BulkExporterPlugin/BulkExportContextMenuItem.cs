@@ -24,7 +24,7 @@ namespace BulkExporterPlugin
             string path = App.SelectedPath;
             //EbxAsset asset = App.AssetManager.GetEbx(entry);
 
-            BulkExportWindow win = new BulkExportWindow(path);
+            BulkExportWindow win = new BulkExportWindow();
             if (win.ShowDialog() == false)
                 return;
 

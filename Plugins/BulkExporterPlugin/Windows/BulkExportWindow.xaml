@@ -7,12 +7,22 @@
         xmlns:ctrl="clr-namespace:Frosty.Controls;assembly=FrostyControls"
         xmlns:core="clr-namespace:Frosty.Core.Controls;assembly=FrostyCore"
         mc:Ignorable="d"
-        Title="Bulk Export" Height="100" Width="300" ResizeMode="NoResize" FrostyLoaded="FrostyMessageBox_FrostyLoaded" WindowStartupLocation="CenterScreen">
+        Title="Bulk Export" Height="auto" Width="300" ResizeMode="NoResize" FrostyLoaded="FrostyMessageBox_FrostyLoaded" WindowStartupLocation="CenterScreen" Background="{StaticResource WindowBackground}">
+
+    <ctrl:FrostyMessageBox.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/FrostyControls;component/Themes/Generic.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </ctrl:FrostyMessageBox.Resources>
 
     <Grid Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -20,15 +30,29 @@
             <ColumnDefinition Width="auto"/>
         </Grid.ColumnDefinitions>
 
-        <CheckBox Margin="0, 2, 0, 0" BorderThickness="1" Grid.Column="0" Grid.Row="0">Export Meshes</CheckBox>
-        <CheckBox Margin="0, 2, 0, 0" BorderThickness="1" Grid.Column="0" Grid.Row="1">Export Textures</CheckBox>
-
-        <Border Grid.Column="1" Grid.Row="2"  Background="{StaticResource ControlBackground}"
+        <DockPanel Grid.Column="0" Grid.Row="0">
+            <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"></CheckBox>
+            <Label Content="Export Meshes" Margin="0, 2, 0, 0" FontFamily="Global User Interface"></Label>
+        </DockPanel>
+        <DockPanel Grid.Column="0" Grid.Row="1">
+            <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"></CheckBox>
+            <Label Content="Export Skinned Meshes" Margin="0, 2, 0, 0" FontFamily="Global User Interface"></Label>
+        </DockPanel>
+        <DockPanel Grid.Column="0" Grid.Row="2">
+            <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"></CheckBox>
+            <Label Content="Export Textures" Margin="0, 2, 0, 0" FontFamily="Global User Interface"></Label>
+        </DockPanel>
+        <DockPanel Grid.Column="0" Grid.Row="3">
+            <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"></CheckBox>
+            <Label Content="Export Audio" Margin="0, 2, 0, 0" FontFamily="Global User Interface"></Label>
+        </DockPanel>
+        
+        <Border Grid.Column="1" Grid.Row="4"  Background="{StaticResource ControlBackground}"
         Margin="1 0 0 0"
         RenderOptions.EdgeMode="Aliased">
             <StackPanel Orientation="Horizontal"
                 Margin="6,2,6,2">
-                <Button x:Name="PART_ExportButton"
+                <Button
                 Margin="0"
                 ToolTip="Export selected files."
                 IsEnabled="true">

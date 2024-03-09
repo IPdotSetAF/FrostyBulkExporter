@@ -21,13 +21,14 @@ namespace BulkExporterPlugin.Windows
     /// </summary>
     public partial class BulkExportWindow : FrostyMessageBox
     {
-        private string _selectedPath;
+        private bool ExportMesh = false;
+        private bool ExportSkinnedMesh = false;
+        private bool ExportTexture = false;
+        private bool ExportAudio = false;
 
-        public BulkExportWindow(string path)
+        public BulkExportWindow()
         {
             InitializeComponent();
-
-            _selectedPath = path;
         }
 
         private void FrostyMessageBox_FrostyLoaded(object sender, EventArgs e)
