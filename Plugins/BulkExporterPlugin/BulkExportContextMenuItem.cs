@@ -1,15 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using System.Windows.Media;
 using BulkExporterPlugin.Windows;
 using Frosty.Core;
+using Frosty.Core.Controls;
+using Frosty.Core.Legacy;
 using Frosty.Core.Windows;
 using FrostySdk.IO;
 using FrostySdk.Managers;
+using Microsoft.Win32;
 
 namespace BulkExporterPlugin
 {
@@ -17,7 +22,7 @@ namespace BulkExporterPlugin
     {
         public override string ContextItemName => "Bulk Export";
         public override ImageSource Icon => new ImageSourceConverter().ConvertFromString("pack://application:,,,/BulkExporterPlugin;component/Images/BulkExporter.png") as ImageSource;
-        public override DataExplorerTargetContextMenu TargetContextMenu => DataExplorerTargetContextMenu.EXPLORER;
+        public override DataExplorerTargetContextMenu TargetContextMenu => DataExplorerTargetContextMenu.EXPLORER
 
         public override RelayCommand ContextItemClicked => new RelayCommand((o) =>
         {
@@ -29,6 +34,53 @@ namespace BulkExporterPlugin
             BulkExportWindow win = new BulkExportWindow();
             if (win.ShowDialog() == false)
                 return;
+
+
+            //LegacyFileEntry selectedAsset = legacyExplorer.SelectedAssets[0] as LegacyFileEntry;
+
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = "Select Export Directory",
+                Filter = "Directory|*.this.directory",
+                FileName = "select"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                string exportPath = dialog.FileName;
+                exportPath = exportPath.Replace("\\select.this.directory", "");
+                exportPath = exportPath.Replace(".this.directory", "");
+                if (!System.IO.Directory.Exists(exportPath))
+                {
+                    System.IO.Directory.CreateDirectory(exportPath);
+                }
+            }
+
+
+            //if (ofd.ShowDialog() == true)
+            //{
+            //    IList<AssetEntry> assets = legacyExplorer.SelectedAssets;
+            //    FrostyTaskWindow.Show("Exporting Legacy Assets", "", (task) =>
+            //    {
+            //        App.AssetManager.SendManagerCommand("legacy", "SetCacheModeEnabled", true);
+            //        FileInfo fi = new FileInfo(sfd.FileName);
+
+            //        int progress = 0;
+            //        foreach (LegacyFileEntry asset in assets)
+            //        {
+            //            task.Update(asset.Name, (progress / (double)assets.Count) * 100.0);
+            //            progress++;
+
+            //            string outFileName = fi.Directory.FullName + "\\" + asset.Filename + "." + asset.Type;
+            //            using (NativeWriter writer = new NativeWriter(new FileStream(outFileName, FileMode.Create)))
+            //                writer.Write(new NativeReader(App.AssetManager.GetCustomAsset("legacy", asset)).ReadToEnd());
+            //        }
+
+            //        App.Logger.Log("Legacy files saved to {0}", fi.Directory.FullName);
+            //        App.AssetManager.SendManagerCommand("legacy", "FlushCache");
+            //    });
+            //}
+
 
             //string newName = win.SelectedPath + "/" + win.SelectedName;
             //newName = newName.Trim('/');

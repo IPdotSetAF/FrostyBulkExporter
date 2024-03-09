@@ -22,6 +22,8 @@ namespace BulkExporterPlugin
     [TemplatePart(Name = PART_AssetFilter, Type = typeof(TextBox))]
     [TemplatePart(Name = PART_Flatten, Type = typeof(CheckBox))]
     [TemplatePart(Name = PART_Mesh, Type = typeof(CheckBox))]
+    [TemplatePart(Name = PART_SkinnedMesh, Type = typeof(CheckBox))]
+    [TemplatePart(Name = PART_Audio, Type = typeof(CheckBox))]
     [TemplatePart(Name = PART_Texture, Type = typeof(CheckBox))]
     [TemplatePart(Name = PART_ExportButton, Type = typeof(Button))]
     public class BulkExporter : FrostyBaseEditor
@@ -34,6 +36,8 @@ namespace BulkExporterPlugin
         private const string PART_Flatten = "PART_Flatten";
         private const string PART_Texture = "PART_Texture";
         private const string PART_Mesh = "PART_Mesh";
+        private const string PART_SkinnedMesh = "PART_SkinnedMesh";
+        private const string PART_Audio = "PART_Audio";
         private const string PART_ExportButton = "PART_ExportButton";
 
         private TreeView AssetTreeView;
@@ -42,6 +46,8 @@ namespace BulkExporterPlugin
         private CheckBox flattenCheck;
         private CheckBox meshCheck;
         private CheckBox textureCheck;
+        private CheckBox audioCheck;
+        private CheckBox skinnedMeshCheck;
         private Button exportButton;
         private ILogger logger;
 
@@ -64,6 +70,9 @@ namespace BulkExporterPlugin
             assetFilterTextBox = GetTemplateChild(PART_AssetFilter) as TextBox;
             flattenCheck = GetTemplateChild(PART_Flatten) as CheckBox;
             meshCheck = GetTemplateChild(PART_Mesh) as CheckBox;
+            textureCheck = GetTemplateChild(PART_Texture) as CheckBox;
+            skinnedMeshCheck = GetTemplateChild(PART_SkinnedMesh) as CheckBox;
+            audioCheck = GetTemplateChild(PART_Audio) as CheckBox;
             textureCheck = GetTemplateChild(PART_Texture) as CheckBox;
             exportButton = GetTemplateChild(PART_ExportButton) as Button;
             exportButton.Click += ExportButton_Click;
