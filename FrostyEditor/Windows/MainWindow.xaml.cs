@@ -235,7 +235,7 @@ namespace FrostyEditor
                     dataExplorer.AssetContextMenu.Items.Add(contextMenuItem);
                 else
                 {
-                    if(dataExplorer.ExplorerContextMenu == null)
+                    if (dataExplorer.ExplorerContextMenu == null)
                         dataExplorer.ExplorerContextMenu = new ContextMenu();
                     dataExplorer.ExplorerContextMenu.Items.Add(contextMenuItem);
                 }
@@ -914,7 +914,7 @@ namespace FrostyEditor
         private void dataExplorer_PathSelectionChanged(object sender, RoutedEventArgs e)
         {
             string path = dataExplorer.SelectedPath as string;
-            App.SelectedPath= path;
+            App.SelectedPath = path;
         }
 
         #region -- Context Menu Callbacks --
