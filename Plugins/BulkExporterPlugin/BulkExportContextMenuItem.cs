@@ -22,7 +22,7 @@ namespace BulkExporterPlugin
     {
         public override string ContextItemName => "Bulk Export";
         public override ImageSource Icon => new ImageSourceConverter().ConvertFromString("pack://application:,,,/BulkExporterPlugin;component/Images/BulkExporter.png") as ImageSource;
-        public override DataExplorerTargetContextMenu TargetContextMenu => DataExplorerTargetContextMenu.EXPLORER
+        public override DataExplorerTargetContextMenu TargetContextMenu => DataExplorerTargetContextMenu.EXPLORER;
 
         public override RelayCommand ContextItemClicked => new RelayCommand((o) =>
         {

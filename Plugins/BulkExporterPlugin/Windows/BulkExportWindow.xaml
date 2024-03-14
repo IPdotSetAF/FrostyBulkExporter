@@ -3,84 +3,137 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:BulkExporterPlugin.Windows"
+        xmlns:conv="clr-namespace:Frosty.Core.Converters;assembly=FrostyCore"
+        xmlns:conv2="clr-namespace:BulkExporterPlugin.Converters"
         xmlns:ctrl="clr-namespace:Frosty.Controls;assembly=FrostyControls"
         xmlns:core="clr-namespace:Frosty.Core.Controls;assembly=FrostyCore"
         mc:Ignorable="d"
-        Title="Bulk Export" Height="auto" Width="300" ResizeMode="NoResize" WindowStartupLocation="CenterScreen" Background="{StaticResource WindowBackground}">
+        Title="Bulk Export" Height="auto" Width="400" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
 
     <ctrl:FrostyMessageBox.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/FrostyControls;component/Themes/Generic.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+
+            <conv:BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter"/>
         </ResourceDictionary>
     </ctrl:FrostyMessageBox.Resources>
 
-    <Grid Margin="10">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-        </Grid.RowDefinitions>
-
-        <DockPanel Grid.Row="0">
-            <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding ExportMesh}"></CheckBox>
-            <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Meshes</Label>
-        </DockPanel>
-        <DockPanel Grid.Row="1">
-            <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding ExportSkinnedMesh}"></CheckBox>
-            <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Skinned Meshes</Label>
-        </DockPanel>
-        <DockPanel Grid.Row="2">
-            <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding ExportTexture}"></CheckBox>
-            <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Textures</Label>
-        </DockPanel>
-        <DockPanel Grid.Row="3">
-            <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding ExportAudio}"></CheckBox>
-            <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Audio</Label>
-        </DockPanel>
-
-        <Grid Grid.Row="4">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="auto"/>
-                <ColumnDefinition Width="auto"/>
-            </Grid.ColumnDefinitions>
+    <Border Padding="10" Background="{StaticResource WindowBackground}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="25px"/>
+                <RowDefinition Height="25px"/>
+                <RowDefinition Height="25px"/>
+                <RowDefinition Height="25px"/>
+                <RowDefinition Height="25px"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="25px"/>
+            </Grid.RowDefinitions>
             
-            <Border Grid.Column="1"  Background="{StaticResource ControlBackground}"
-Margin="5 0 0 0"
-RenderOptions.EdgeMode="Aliased">
-                <Button
-        Padding="6,2,6,2"
-        ToolTip="Export selected files."
-        IsEnabled="true"
-        Click="CancelButton_Click">Cancel</Button>
+            <DockPanel Grid.Row="0">
+                <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding Flatten}"></CheckBox>
+                <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Flatten Hirarchy</Label>
+            </DockPanel>
+            <DockPanel Grid.Row="1">
+                <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding ExportAudio}"></CheckBox>
+                <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Audio</Label>
+            </DockPanel>
+            <DockPanel Grid.Row="2">
+                <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding ExportTexture}"></CheckBox>
+                <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Textures</Label>
+            </DockPanel>
+            <DockPanel Grid.Row="3">
+                <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding ExportMesh}"></CheckBox>
+                <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Meshes</Label>
+            </DockPanel>
+            <DockPanel Grid.Row="4">
+                <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding ExportSkinnedMesh}" x:Name="PART_ExportSkinnedMesh"></CheckBox>
+                <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Skinned Meshes</Label>
+            </DockPanel>
+
+            <Border Margin="0, 5, 0, 0" Grid.Row="5" BorderThickness="1" BorderBrush="{StaticResource ControlHighlight}" Visibility="{Binding IsMeshSettingVisible, Converter={StaticResource booleanToVisibilityConverter}}">
+                <Grid  Margin="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                    </Grid.RowDefinitions>
+                    <!-- Insert Mesh Export Setting here -->
+
+                    <DockPanel Grid.Row="0">
+                        <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Mesh Export Format:</Label>
+                        <ComboBox Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" 
+                                  IsEditable="False" IsReadOnly="true" SelectedValuePath="Value" DisplayMemberPath="Description"
+                                  SelectedValue="{Binding Path=MeshExportFormat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  ItemsSource="{Binding Path=MeshExportFormat, Converter={conv2:EnumToCollectionConverter}, Mode=OneTime}"/>
+                    </DockPanel>
+
+                    <DockPanel Grid.Row="1">
+                        <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">FBX Version:</Label>
+                        <ComboBox Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" 
+                                  SelectedValuePath="Value" DisplayMemberPath="Description"
+                                  SelectedValue="{Binding Path=FbxVersion, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  ItemsSource="{Binding Path=FbxVersion, Converter={conv2:EnumToCollectionConverter}, Mode=OneTime}"/>
+                    </DockPanel>
+
+                    <DockPanel Grid.Row="2">
+                        <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Mesh Scale:</Label>
+                        <ComboBox Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" 
+                                  SelectedValuePath="Value" DisplayMemberPath="Description"
+                                  SelectedValue="{Binding Path=MeshScale, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  ItemsSource="{Binding Path=MeshScale, Converter={conv2:EnumToCollectionConverter}, Mode=OneTime}"/>
+                    </DockPanel>
+                </Grid>
             </Border>
 
-            <Border Grid.Column="2"  Background="{StaticResource ControlBackground}"
-Margin="5 0 0 0"
-RenderOptions.EdgeMode="Aliased">
-                <Button
-        Padding="6,2,6,2"
-        ToolTip="Export selected files."
-        IsEnabled="true"
-        Click="ExportButton_Click">
-                    <StackPanel Orientation="Horizontal"
-                Margin="4 0 4 0">
-                        <Image Grid.Column="0"
-               Source="pack://application:,,,/BulkExporterPlugin;component/Images/BulkExporter.png"
-               Width="16" />
-                        <TextBlock Grid.Column="1"
-                   Text="Export"
-                   VerticalAlignment="Center"
-                   Margin="4 0 0 0" />
-                    </StackPanel>
-                </Button>
+            <Border Margin="0, 5, 0, 0" Grid.Row="6" BorderThickness="1" BorderBrush="{StaticResource ControlHighlight}" Visibility="{Binding IsChecked, ElementName=PART_ExportSkinnedMesh, Converter={StaticResource booleanToVisibilityConverter}}">
+                <Grid  Margin="5">
+
+                </Grid>
             </Border>
+
+            <Grid Grid.Row="7" Margin="0, 5, 0, 0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="1"  Background="{StaticResource ControlBackground}"
+                        Margin="5 0 0 0"
+                        RenderOptions.EdgeMode="Aliased">
+                    <Button Padding="6,2,6,2"
+                            ToolTip="Export selected files."
+                            IsEnabled="true"
+                            Click="CancelButton_Click">Cancel</Button>
+                </Border>
+
+                <Border Grid.Column="2"  Background="{StaticResource ControlBackground}"
+                        Margin="5 0 0 0"
+                        RenderOptions.EdgeMode="Aliased">
+                    <Button Padding="6,2,6,2"
+                            ToolTip="Export selected files."
+                            IsEnabled="true"
+                            Click="ExportButton_Click">
+                        <StackPanel Orientation="Horizontal"
+                                    Margin="4 0 4 0">
+                            <Image Grid.Column="0"
+                                   Source="pack://application:,,,/BulkExporterPlugin;component/Images/BulkExporter.png"
+                                   Width="16" />
+                            <TextBlock Grid.Column="1"
+                                       Text="Export"
+                                       VerticalAlignment="Center"
+                                       Margin="4 0 0 0" />
+                        </StackPanel>
+                    </Button>
+                </Border>
+            </Grid>
+
         </Grid>
-        
-    </Grid>
+
+    </Border>
 </ctrl:FrostyMessageBox>
