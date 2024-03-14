@@ -112,6 +112,33 @@ namespace BulkExporterPlugin.Windows
         }
         #endregion
 
+        #region --FlattenMesh--
+        private bool _flattenMesh = false;
+        public bool FlattenMesh
+        {
+            get => _flattenMesh;
+            set => _flattenMesh = value;
+        }
+        #endregion
+
+        #region --SingleLOD--
+        private bool _singleLOD = false;
+        public bool SingleLOD
+        {
+            get => _singleLOD;
+            set => _singleLOD = value;
+        }
+        #endregion
+
+        #region --AdditionalMeshes--
+        private bool _additionalMeshes = false;
+        public bool AdditionalMeshes
+        {
+            get => _additionalMeshes;
+            set => _additionalMeshes = value;
+        }
+        #endregion
+
         #region NotifyChanges
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string name = null)

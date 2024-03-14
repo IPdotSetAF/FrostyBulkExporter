@@ -35,7 +35,7 @@
             
             <DockPanel Grid.Row="0">
                 <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding Flatten}"></CheckBox>
-                <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Flatten Hirarchy</Label>
+                <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Flatten Folder Hirarchy</Label>
             </DockPanel>
             <DockPanel Grid.Row="1">
                 <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding ExportAudio}"></CheckBox>
@@ -54,13 +54,16 @@
                 <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Skinned Meshes</Label>
             </DockPanel>
 
-            <Border Margin="0, 5, 0, 0" Grid.Row="5" BorderThickness="1" BorderBrush="{StaticResource ControlHighlight}" Visibility="{Binding IsMeshSettingVisible, Converter={StaticResource booleanToVisibilityConverter}}">
+                <GroupBox Header="Mesh Export Settings" Margin="0, 5, 0, 0" Grid.Row="5"
+                      Visibility="{Binding IsMeshSettingVisible, Converter={StaticResource booleanToVisibilityConverter}}">
                 <Grid  Margin="5">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="auto"/>
                         <RowDefinition Height="auto"/>
                         <RowDefinition Height="auto"/>
-                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="25px"/>
+                        <RowDefinition Height="25px"/>
+                        <RowDefinition Height="25px"/>
                     </Grid.RowDefinitions>
                     <!-- Insert Mesh Export Setting here -->
 
@@ -87,14 +90,31 @@
                                   SelectedValue="{Binding Path=MeshScale, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                   ItemsSource="{Binding Path=MeshScale, Converter={conv2:EnumToCollectionConverter}, Mode=OneTime}"/>
                     </DockPanel>
-                </Grid>
-            </Border>
 
-            <Border Margin="0, 5, 0, 0" Grid.Row="6" BorderThickness="1" BorderBrush="{StaticResource ControlHighlight}" Visibility="{Binding IsChecked, ElementName=PART_ExportSkinnedMesh, Converter={StaticResource booleanToVisibilityConverter}}">
+                    <DockPanel Grid.Row="3">
+                        <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding FlattenMesh}"></CheckBox>
+                        <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Flatten Hirarchy (Blender)</Label>
+                    </DockPanel>
+
+                    <DockPanel Grid.Row="4">
+                        <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding SingleLOD}"></CheckBox>
+                        <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Single LOD</Label>
+                    </DockPanel>
+
+                    <DockPanel Grid.Row="5">
+                        <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding AdditionalMeshes}"></CheckBox>
+                        <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Additional Meshes</Label>
+                    </DockPanel>
+
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Header="Skinned Mesh Export Settings" Margin="0, 5, 0, 0" Grid.Row="6" 
+                      Visibility="{Binding IsChecked, ElementName=PART_ExportSkinnedMesh, Converter={StaticResource booleanToVisibilityConverter}}">
                 <Grid  Margin="5">
 
                 </Grid>
-            </Border>
+            </GroupBox>
 
             <Grid Grid.Row="7" Margin="0, 5, 0, 0">
                 <Grid.ColumnDefinitions>
