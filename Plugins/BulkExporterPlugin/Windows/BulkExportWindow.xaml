@@ -8,7 +8,7 @@
         xmlns:ctrl="clr-namespace:Frosty.Controls;assembly=FrostyControls"
         xmlns:core="clr-namespace:Frosty.Core.Controls;assembly=FrostyCore"
         mc:Ignorable="d"
-        Title="Bulk Export" Height="auto" Width="400" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
+        Title="Bulk Export" MinHeight="50" Height="auto" Width="400" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
 
     <ctrl:FrostyMessageBox.Resources>
         <ResourceDictionary>
@@ -26,35 +26,38 @@
                 <RowDefinition Height="25px"/>
                 <RowDefinition Height="25px"/>
                 <RowDefinition Height="25px"/>
-                <RowDefinition Height="25px"/>
-                <RowDefinition Height="25px"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="25px"/>
             </Grid.RowDefinitions>
             
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.5*"/>
+                <ColumnDefinition Width="0.5*"/>
+            </Grid.ColumnDefinitions>
+
             <DockPanel Grid.Row="0">
                 <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding Flatten}"></CheckBox>
                 <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Flatten Folder Hirarchy</Label>
             </DockPanel>
-            <DockPanel Grid.Row="1">
+            <DockPanel Grid.Row="1" Grid.Column="1">
                 <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding ExportAudio}"></CheckBox>
                 <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Audio</Label>
             </DockPanel>
-            <DockPanel Grid.Row="2">
+            <DockPanel Grid.Row="2" Grid.Column="1">
                 <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding ExportTexture}"></CheckBox>
                 <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Textures</Label>
             </DockPanel>
-            <DockPanel Grid.Row="3">
+            <DockPanel Grid.Row="1">
                 <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding ExportMesh}"></CheckBox>
                 <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Meshes</Label>
             </DockPanel>
-            <DockPanel Grid.Row="4">
+            <DockPanel Grid.Row="2">
                 <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding ExportSkinnedMesh}" x:Name="PART_ExportSkinnedMesh"></CheckBox>
                 <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Skinned Meshes</Label>
             </DockPanel>
 
-                <GroupBox Header="Mesh Export Settings" Margin="0, 5, 0, 0" Grid.Row="5"
+            <GroupBox Header="Mesh Export Settings" Margin="0, 5, 0, 0" Grid.Row="3" Grid.ColumnSpan="2"
                       Visibility="{Binding IsMeshSettingVisible, Converter={StaticResource booleanToVisibilityConverter}}">
                 <Grid  Margin="5">
                     <Grid.RowDefinitions>
@@ -63,33 +66,30 @@
                         <RowDefinition Height="auto"/>
                         <RowDefinition Height="25px"/>
                         <RowDefinition Height="25px"/>
-                        <RowDefinition Height="25px"/>
                     </Grid.RowDefinitions>
-                    <!-- Insert Mesh Export Setting here -->
 
-                    <DockPanel Grid.Row="0">
-                        <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Mesh Export Format:</Label>
-                        <ComboBox Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" 
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.5*"/>
+                        <ColumnDefinition Width="0.5*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Label Grid.Row="0" Margin="0, 2, 0, 0" FontFamily="Global User Interface">Mesh Export Format:</Label>
+                    <ComboBox  Grid.Row="0" Grid.Column="1" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" 
                                   IsEditable="False" IsReadOnly="true" SelectedValuePath="Value" DisplayMemberPath="Description"
                                   SelectedValue="{Binding Path=MeshExportFormat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                   ItemsSource="{Binding Path=MeshExportFormat, Converter={conv2:EnumToCollectionConverter}, Mode=OneTime}"/>
-                    </DockPanel>
 
-                    <DockPanel Grid.Row="1">
-                        <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">FBX Version:</Label>
-                        <ComboBox Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" 
+                    <Label Grid.Row="1" Margin="0, 2, 0, 0" FontFamily="Global User Interface">FBX Version:</Label>
+                    <ComboBox Grid.Row="1" Grid.Column="1" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" 
                                   SelectedValuePath="Value" DisplayMemberPath="Description"
                                   SelectedValue="{Binding Path=FbxVersion, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                   ItemsSource="{Binding Path=FbxVersion, Converter={conv2:EnumToCollectionConverter}, Mode=OneTime}"/>
-                    </DockPanel>
 
-                    <DockPanel Grid.Row="2">
-                        <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Mesh Scale:</Label>
-                        <ComboBox Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" 
+                    <Label Grid.Row="2" Margin="0, 2, 0, 0" FontFamily="Global User Interface">Mesh Scale:</Label>
+                    <ComboBox Grid.Row="2" Grid.Column="1" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" 
                                   SelectedValuePath="Value" DisplayMemberPath="Description"
                                   SelectedValue="{Binding Path=MeshScale, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                   ItemsSource="{Binding Path=MeshScale, Converter={conv2:EnumToCollectionConverter}, Mode=OneTime}"/>
-                    </DockPanel>
 
                     <DockPanel Grid.Row="3">
                         <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding FlattenMesh}"></CheckBox>
@@ -101,7 +101,7 @@
                         <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Single LOD</Label>
                     </DockPanel>
 
-                    <DockPanel Grid.Row="5">
+                    <DockPanel Grid.Row="4" Grid.Column="1">
                         <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding AdditionalMeshes}"></CheckBox>
                         <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Additional Meshes</Label>
                     </DockPanel>
@@ -109,14 +109,14 @@
                 </Grid>
             </GroupBox>
 
-            <GroupBox Header="Skinned Mesh Export Settings" Margin="0, 5, 0, 0" Grid.Row="6" 
+            <GroupBox Header="Skinned Mesh Export Settings" Margin="0, 5, 0, 0" Grid.Row="4"  Grid.ColumnSpan="2"
                       Visibility="{Binding IsChecked, ElementName=PART_ExportSkinnedMesh, Converter={StaticResource booleanToVisibilityConverter}}">
                 <Grid  Margin="5">
 
                 </Grid>
             </GroupBox>
 
-            <Grid Grid.Row="7" Margin="0, 5, 0, 0">
+            <Grid Grid.Row="5" Grid.Column="1" Margin="0, 5, 0, 0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="auto"/>
