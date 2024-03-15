@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -52,7 +53,11 @@ namespace BulkExporterPlugin
                 }
             }
 
-            //EbxAsset asset = App.AssetManager.GetEbx(entry);
+            var t1 = Exporter.EnumerateMeshAssets(selectedPath);
+            var t2 = Exporter.EnumerateSkinnedMeshAssets(selectedPath);
+            var t3 = Exporter.EnumerateTextureAssets(selectedPath);
+            var t4 = Exporter.EnumerateAudioAssets(selectedPath);
+            //EbxAsset asset = 
             //LegacyFileEntry selectedAsset = legacyExplorer.SelectedAssets[0] as LegacyFileEntry;
 
 
@@ -111,8 +116,10 @@ namespace BulkExporterPlugin
             //    }
             //});
 
+
             App.EditorWindow.DataExplorer.RefreshAll();
         });
+
 
         //public void DuplicateContextMenuItem()
         //{
