@@ -29,6 +29,7 @@
                 <RowDefinition Height="25px"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
                 <RowDefinition Height="25px"/>
             </Grid.RowDefinitions>
 
@@ -46,7 +47,7 @@
                 <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Audio</Label>
             </DockPanel>
             <DockPanel Grid.Row="2" Grid.Column="1">
-                <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding ExportTexture}"></CheckBox>
+                <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding ExportTexture}" x:Name="PART_ExportTextures"></CheckBox>
                 <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Textures</Label>
             </DockPanel>
             <DockPanel Grid.Row="1">
@@ -58,7 +59,27 @@
                 <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Skinned Meshes</Label>
             </DockPanel>
 
-            <GroupBox Header="Mesh Export Settings" Margin="0, 5, 0, 0" Grid.Row="3" Grid.ColumnSpan="2"
+            <GroupBox Header="Texture Export Settings" Margin="0, 5, 0, 0" Grid.Row="3"  Grid.ColumnSpan="2"
+                        Visibility="{Binding IsChecked, ElementName=PART_ExportTextures, Converter={StaticResource booleanToVisibilityConverter}}">
+                <Grid Margin="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.5*"/>
+                        <ColumnDefinition Width="0.5*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Label Grid.Row="0" Margin="0, 2, 0, 0" FontFamily="Global User Interface">Texture Export Format:</Label>
+                    <ComboBox  Grid.Row="0" Grid.Column="1" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" 
+                              IsEditable="False" IsReadOnly="true" SelectedValuePath="Value" DisplayMemberPath="Description"
+                              SelectedValue="{Binding Path=TextureExportFormat, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              ItemsSource="{Binding Path=TextureExportFormat, Converter={conv2:EnumToCollectionConverter}, Mode=OneTime}"/>
+
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Header="Mesh Export Settings" Margin="0, 5, 0, 0" Grid.Row="4" Grid.ColumnSpan="2"
                       Visibility="{Binding IsMeshSettingVisible, Converter={StaticResource booleanToVisibilityConverter}}">
                 <Grid  Margin="5">
                     <Grid.RowDefinitions>
@@ -110,14 +131,14 @@
                 </Grid>
             </GroupBox>
 
-            <GroupBox Header="Skinned Mesh Export Settings" Margin="0, 5, 0, 0" Grid.Row="4"  Grid.ColumnSpan="2"
+            <GroupBox Header="Skinned Mesh Export Settings" Margin="0, 5, 0, 0" Grid.Row="5"  Grid.ColumnSpan="2"
                       Visibility="{Binding IsChecked, ElementName=PART_ExportSkinnedMesh, Converter={StaticResource booleanToVisibilityConverter}}">
                 <editors:FrostySkeletonControl>
                     
                 </editors:FrostySkeletonControl>
             </GroupBox>
 
-            <Grid Grid.Row="5" Grid.Column="1" Margin="0, 5, 0, 0">
+            <Grid Grid.Row="6" Grid.Column="1" Margin="0, 5, 0, 0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="auto"/>

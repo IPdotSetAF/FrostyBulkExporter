@@ -1,7 +1,7 @@
 ﻿
 namespace BulkExporterPlugin.Enums
 {
-    public enum MeshExportScale
+    public enum MeshScale
     {
         Millimeters,
         Centimeters,

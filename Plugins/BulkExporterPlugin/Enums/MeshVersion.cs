@@ -1,7 +1,7 @@
 ﻿
 namespace BulkExporterPlugin.Enums
 {
-    public enum MeshExportVersion
+    public enum MeshVersion
     {
         FBX_2012,
         FBX_2013,
