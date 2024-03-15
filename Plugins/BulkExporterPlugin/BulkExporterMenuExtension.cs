@@ -1,4 +1,5 @@
-﻿using Frosty.Core;
+﻿using BulkExporterPlugin.Editors;
+using Frosty.Core;
 using System.Windows.Media;
 
 namespace BulkExporterPlugin

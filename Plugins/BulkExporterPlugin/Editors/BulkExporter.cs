@@ -15,7 +15,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace BulkExporterPlugin
+namespace BulkExporterPlugin.Editors
 {
     [TemplatePart(Name = PART_AssetTreeView, Type = typeof(TreeView))]
     [TemplatePart(Name = PART_DataExplorer, Type = typeof(FrostyDataExplorer))]

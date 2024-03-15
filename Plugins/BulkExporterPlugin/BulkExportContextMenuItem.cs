@@ -26,19 +26,15 @@ namespace BulkExporterPlugin
 
         public override RelayCommand ContextItemClicked => new RelayCommand((o) =>
         {
-            string path = App.SelectedPath;
-            //EbxAsset asset = App.AssetManager.GetEbx(entry);
-
             string selectedPath = App.SelectedPath;
 
             BulkExportWindow win = new BulkExportWindow();
             if (win.ShowDialog() == false)
                 return;
 
+            var exportConfig = win.ExportSetting;
 
-            //LegacyFileEntry selectedAsset = legacyExplorer.SelectedAssets[0] as LegacyFileEntry;
-
-            var dialog = new Microsoft.Win32.SaveFileDialog
+            var dialog = new SaveFileDialog
             {
                 Title = "Select Export Directory",
                 Filter = "Directory|*.this.directory",
@@ -50,11 +46,14 @@ namespace BulkExporterPlugin
                 string exportPath = dialog.FileName;
                 exportPath = exportPath.Replace("\\select.this.directory", "");
                 exportPath = exportPath.Replace(".this.directory", "");
-                if (!System.IO.Directory.Exists(exportPath))
+                if (!Directory.Exists(exportPath))
                 {
-                    System.IO.Directory.CreateDirectory(exportPath);
+                    Directory.CreateDirectory(exportPath);
                 }
             }
+
+            //EbxAsset asset = App.AssetManager.GetEbx(entry);
+            //LegacyFileEntry selectedAsset = legacyExplorer.SelectedAssets[0] as LegacyFileEntry;
 
 
             //if (ofd.ShowDialog() == true)
