@@ -149,8 +149,7 @@ namespace BulkExporterPlugin.Windows
 
         public BulkExportWindow()
         {
-            _setting = new BulkExportSetting();
-            //load exportSettings from storage
+            _setting = BulkExportSetting.GetConfig();
 
             InitializeComponent();
             DataContext = this;
@@ -159,6 +158,7 @@ namespace BulkExporterPlugin.Windows
         private void ExportButton_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = true;
+            BulkExportSetting.StoreConfig(_setting);
             Close();
         }
 
