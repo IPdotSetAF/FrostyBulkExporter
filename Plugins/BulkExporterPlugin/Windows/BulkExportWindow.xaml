@@ -7,6 +7,7 @@
         xmlns:conv2="clr-namespace:BulkExporterPlugin.Converters"
         xmlns:ctrl="clr-namespace:Frosty.Controls;assembly=FrostyControls"
         xmlns:core="clr-namespace:Frosty.Core.Controls;assembly=FrostyCore"
+        xmlns:editors="clr-namespace:BulkExporterPlugin.Editors"
         mc:Ignorable="d"
         Title="Bulk Export" MinHeight="50" Height="auto" Width="400" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
 
@@ -30,7 +31,7 @@
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="25px"/>
             </Grid.RowDefinitions>
-            
+
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="0.5*"/>
                 <ColumnDefinition Width="0.5*"/>
@@ -111,9 +112,9 @@
 
             <GroupBox Header="Skinned Mesh Export Settings" Margin="0, 5, 0, 0" Grid.Row="4"  Grid.ColumnSpan="2"
                       Visibility="{Binding IsChecked, ElementName=PART_ExportSkinnedMesh, Converter={StaticResource booleanToVisibilityConverter}}">
-                <Grid  Margin="5">
-
-                </Grid>
+                <editors:FrostySkeletonControl>
+                    
+                </editors:FrostySkeletonControl>
             </GroupBox>
 
             <Grid Grid.Row="5" Grid.Column="1" Margin="0, 5, 0, 0">
