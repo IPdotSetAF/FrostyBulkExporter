@@ -1,4 +1,5 @@
-﻿using Frosty.Core;
+﻿using BulkExporterPlugin.Models;
+using Frosty.Core;
 using FrostySdk.Managers;
 using System;
 using System.Collections.Generic;
@@ -35,6 +36,17 @@ namespace BulkExporterPlugin
             }
 
             return items;
+        }
+
+        public static AssetCollection EnumerateAllAssets(string path)
+        {
+            return new AssetCollection
+            {
+                Meshes = EnumerateMeshAssets(path),
+                SkinnedMeshes = EnumerateSkinnedMeshAssets(path),
+                Textures = EnumerateTextureAssets(path),
+                Audios = EnumerateAudioAssets(path),
+            };
         }
     }
 }

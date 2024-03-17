@@ -21,6 +21,11 @@ namespace BulkExporterPlugin.Windows
         private BulkExportSetting _setting;
         public BulkExportSetting ExportSetting { get => _setting; }
 
+        #region --AssetCount--
+        private readonly AssetCount _assetCount;
+        public AssetCount AssetCount { get => _assetCount; }
+        #endregion
+
         #region --Flatten--
         public bool Flatten
         {
@@ -140,9 +145,10 @@ namespace BulkExporterPlugin.Windows
         }
         #endregion
 
-        public BulkExportWindow()
+        public BulkExportWindow(AssetCount assetCount)
         {
             _setting = BulkExportSetting.GetConfig();
+            _assetCount = assetCount;
 
             InitializeComponent();
             DataContext = this;

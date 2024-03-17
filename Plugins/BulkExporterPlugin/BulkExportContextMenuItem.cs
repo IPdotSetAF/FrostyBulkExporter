@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Media;
+using BulkExporterPlugin.Models;
 using BulkExporterPlugin.Windows;
 using Frosty.Core;
 using Frosty.Core.Controls;
@@ -29,7 +30,9 @@ namespace BulkExporterPlugin
         {
             string selectedPath = App.SelectedPath;
 
-            BulkExportWindow win = new BulkExportWindow();
+            AssetCollection assets = Exporter.EnumerateAllAssets(selectedPath);
+
+            BulkExportWindow win = new BulkExportWindow(assets.GetCounts());
             if (win.ShowDialog() == false)
                 return;
 
@@ -52,13 +55,6 @@ namespace BulkExporterPlugin
                     Directory.CreateDirectory(exportPath);
                 }
             }
-
-            var t1 = Exporter.EnumerateMeshAssets(selectedPath);
-            var t2 = Exporter.EnumerateSkinnedMeshAssets(selectedPath);
-            var t3 = Exporter.EnumerateTextureAssets(selectedPath);
-            var t4 = Exporter.EnumerateAudioAssets(selectedPath);
-            //EbxAsset asset = 
-            //LegacyFileEntry selectedAsset = legacyExplorer.SelectedAssets[0] as LegacyFileEntry;
 
 
             //if (ofd.ShowDialog() == true)
@@ -119,20 +115,5 @@ namespace BulkExporterPlugin
 
             App.EditorWindow.DataExplorer.RefreshAll();
         });
-
-
-        //public void DuplicateContextMenuItem()
-        //{
-        //    foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
-        //    {
-        //        if (type.IsSubclassOf(typeof(DuplicateAssetExtension)))
-        //        {
-        //            var extension = (DuplicateAssetExtension)Activator.CreateInstance(type);
-        //            extensions.Add(extension.AssetType, extension);
-        //        }
-        //    }
-        //    extensions.Add("null", new DuplicateAssetExtension());
-        //}
-
     }
 }

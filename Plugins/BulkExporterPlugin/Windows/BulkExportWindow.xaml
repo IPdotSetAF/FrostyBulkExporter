@@ -44,19 +44,19 @@
             </DockPanel>
             <DockPanel Grid.Row="1" Grid.Column="1">
                 <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding ExportAudio}"></CheckBox>
-                <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Audio</Label>
+                <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface" Content="{Binding AssetCount.AudioCount}" ContentStringFormat="Export Audio ({0})"/>
             </DockPanel>
             <DockPanel Grid.Row="2" Grid.Column="1">
                 <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding ExportTexture}" x:Name="PART_ExportTextures"></CheckBox>
-                <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Textures</Label>
+                <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface" Content="{Binding AssetCount.TextureCount}" ContentStringFormat="Export Textures ({0})"/>
             </DockPanel>
             <DockPanel Grid.Row="1">
                 <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding ExportMesh}"></CheckBox>
-                <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Meshes</Label>
+                <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface" Content="{Binding AssetCount.MeshCount}" ContentStringFormat="Export Meshes ({0})"/>
             </DockPanel>
             <DockPanel Grid.Row="2">
                 <CheckBox  Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="{Binding ExportSkinnedMesh}" x:Name="PART_ExportSkinnedMesh"></CheckBox>
-                <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface">Export Skinned Meshes</Label>
+                <Label Margin="0, 2, 0, 0" FontFamily="Global User Interface" Content="{Binding AssetCount.SkinnedMeshCount}" ContentStringFormat="Export Skinned Meshes ({0})"/>
             </DockPanel>
 
             <GroupBox Header="Texture Export Settings" Margin="0, 5, 0, 0" Grid.Row="3"  Grid.ColumnSpan="2"
