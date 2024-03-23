@@ -54,6 +54,7 @@ namespace BulkExporterPlugin.Windows
             {
                 _setting.ExportSkinnedMeshes = value;
                 OnPropertyChanged(nameof(IsMeshSettingVisible));
+                OnPropertyChanged(nameof(IsExportEnabled));
             }
         }
         #endregion
@@ -86,6 +87,25 @@ namespace BulkExporterPlugin.Windows
         public bool IsMeshSettingVisible
         {
             get => _setting.ExportMeshes || _setting.ExportSkinnedMeshes;
+        }
+        #endregion
+
+        #region --IsExportEnabled--
+        public bool IsExportEnabled
+        {
+            get => !_setting.ExportSkinnedMeshes || (_setting.ExportSkinnedMeshes && !String.IsNullOrEmpty(_setting.SkeletonPath));
+        }
+        #endregion
+
+        #region --SkeletonPath--
+        public string SkeletonPath
+        {
+            get => _setting.SkeletonPath;
+            set
+            {
+                _setting.SkeletonPath = value;
+                OnPropertyChanged(nameof(IsExportEnabled));
+            }
         }
         #endregion
 

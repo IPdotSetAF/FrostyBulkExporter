@@ -133,9 +133,7 @@
 
             <GroupBox Header="Skinned Mesh Export Settings" Margin="0, 5, 0, 0" Grid.Row="5"  Grid.ColumnSpan="2"
                       Visibility="{Binding IsChecked, ElementName=PART_ExportSkinnedMesh, Converter={StaticResource booleanToVisibilityConverter}}">
-                <editors:FrostySkeletonControl>
-                    
-                </editors:FrostySkeletonControl>
+                <editors:FrostySkeletonControl Result="{Binding SkeletonPath ,Mode=TwoWay}"/>
             </GroupBox>
 
             <Grid Grid.Row="6" Grid.Column="1" Margin="0, 5, 0, 0">
@@ -159,7 +157,7 @@
                         RenderOptions.EdgeMode="Aliased">
                     <Button Padding="6,2,6,2"
                             ToolTip="Export selected files."
-                            IsEnabled="true"
+                            IsEnabled="{Binding IsExportEnabled}"
                             Click="ExportButton_Click">
                         <StackPanel Orientation="Horizontal"
                                     Margin="4 0 4 0">
