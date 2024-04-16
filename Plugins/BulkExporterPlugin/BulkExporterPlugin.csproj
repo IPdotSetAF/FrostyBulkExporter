@@ -57,6 +57,9 @@
     <ProjectReference Include="..\..\FrostySdk\FrostySdk.csproj">
       <Private>false</Private>
     </ProjectReference>
+    <ProjectReference Include="..\MeshSetPlugin\MeshSetPlugin.csproj" />
+    <ProjectReference Include="..\SoundEditorPlugin\SoundEditorPlugin.csproj" />
+    <ProjectReference Include="..\TexturePlugin\TexturePlugin.csproj" />
   </ItemGroup>
   
   <ItemGroup>

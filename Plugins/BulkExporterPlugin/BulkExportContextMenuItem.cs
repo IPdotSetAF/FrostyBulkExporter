@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Media;
+using BulkExporterPlugin.Exporters;
 using BulkExporterPlugin.Models;
 using BulkExporterPlugin.Windows;
 using Frosty.Core;
@@ -31,8 +32,9 @@ namespace BulkExporterPlugin
             string selectedPath = App.SelectedPath;
 
             AssetCollection assets = Exporter.EnumerateAllAssets(selectedPath);
+            AssetCount assetCounts = assets.GetCounts();
 
-            BulkExportWindow win = new BulkExportWindow(assets.GetCounts());
+            BulkExportWindow win = new BulkExportWindow(assetCounts);
             if (win.ShowDialog() == false)
                 return;
 
@@ -45,9 +47,11 @@ namespace BulkExporterPlugin
                 FileName = "select"
             };
 
+            string exportPath = "";
+
             if (dialog.ShowDialog() == true)
             {
-                string exportPath = dialog.FileName;
+                exportPath = dialog.FileName;
                 exportPath = exportPath.Replace("\\select.this.directory", "");
                 exportPath = exportPath.Replace(".this.directory", "");
                 if (!Directory.Exists(exportPath))
@@ -55,63 +59,10 @@ namespace BulkExporterPlugin
                     Directory.CreateDirectory(exportPath);
                 }
             }
+            else
+                return;
 
-
-            //if (ofd.ShowDialog() == true)
-            //{
-            //    IList<AssetEntry> assets = legacyExplorer.SelectedAssets;
-            //    FrostyTaskWindow.Show("Exporting Legacy Assets", "", (task) =>
-            //    {
-            //        App.AssetManager.SendManagerCommand("legacy", "SetCacheModeEnabled", true);
-            //        FileInfo fi = new FileInfo(sfd.FileName);
-
-            //        int progress = 0;
-            //        foreach (LegacyFileEntry asset in assets)
-            //        {
-            //            task.Update(asset.Name, (progress / (double)assets.Count) * 100.0);
-            //            progress++;
-
-            //            string outFileName = fi.Directory.FullName + "\\" + asset.Filename + "." + asset.Type;
-            //            using (NativeWriter writer = new NativeWriter(new FileStream(outFileName, FileMode.Create)))
-            //                writer.Write(new NativeReader(App.AssetManager.GetCustomAsset("legacy", asset)).ReadToEnd());
-            //        }
-
-            //        App.Logger.Log("Legacy files saved to {0}", fi.Directory.FullName);
-            //        App.AssetManager.SendManagerCommand("legacy", "FlushCache");
-            //    });
-            //}
-
-
-            //string newName = win.SelectedPath + "/" + win.SelectedName;
-            //newName = newName.Trim('/');
-
-            //Type newType = win.SelectedType;
-            //FrostyTaskWindow.Show("Duplicating asset", "", (task) =>
-            //{
-            //    if (!MeshVariationDb.IsLoaded)
-            //        MeshVariationDb.LoadVariations(task);
-
-            //    try
-            //    {
-            //        string key = "null";
-            //        foreach (string typekey in extensions.Keys)
-            //        {
-            //            if (TypeLibrary.IsSubClassOf(entry.Type, typekey))
-            //            {
-            //                key = typekey;
-            //                break;
-            //            }
-            //        }
-
-            //        task.Update("Duplicating asset...");
-            //        extensions[key].DuplicateAsset(entry, newName, newType != null, newType);
-            //    }
-            //    catch (Exception e)
-            //    {
-            //        App.Logger.Log($"Failed to duplicate {entry.Name}");
-            //    }
-            //});
-
+            assets.ExportAssets(exportPath + '\\' + selectedPath.Split('/').Last(), exportConfig);
 
             App.EditorWindow.DataExplorer.RefreshAll();
         });
