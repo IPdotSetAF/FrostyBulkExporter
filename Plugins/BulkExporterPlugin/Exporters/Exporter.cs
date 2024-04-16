@@ -3,6 +3,7 @@ using Frosty.Core;
 using Frosty.Core.Windows;
 using FrostySdk.IO;
 using FrostySdk.Managers;
+using FrostySdk.Resources;
 using MeshSetPlugin;
 using MeshSetPlugin.Resources;
 using System;
@@ -13,6 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TexturePlugin;
 
 namespace BulkExporterPlugin.Exporters
 {
@@ -85,12 +87,9 @@ namespace BulkExporterPlugin.Exporters
                     FBXExporter exporter = new FBXExporter(task);
                     foreach (AssetEntry asset in assetCollection.Meshes)
                     {
-                        var ebxAssetEntry = asset as EbxAssetEntry;
-                        if (ebxAssetEntry == null)
+                        dynamic meshAsset = GetAsset(asset);
+                        if (meshAsset == null)
                             continue;
-
-                        EbxAsset ebxAsset = App.AssetManager.GetEbx(ebxAssetEntry);
-                        dynamic meshAsset = (dynamic)ebxAsset.RootObject;
 
                         ulong resRid = meshAsset.MeshSetResource;
                         ResAssetEntry rEntry = App.AssetManager.GetResEntry(resRid);
@@ -99,10 +98,11 @@ namespace BulkExporterPlugin.Exporters
                         var filePath = CreateAssetFilePath(path, commonPath, asset.Name, settings.Flatten);
                         if (filePath.EndsWith("_mesh"))
                             filePath = filePath.Substring(0, filePath.Length - 5);
-                        filePath += '.' + settings.MeshFormat.ToString().ToLower();
+                        var format = settings.MeshFormat.ToString().ToLower();
+                        filePath += '.' + format;
                         EnsureDirectoryExists(filePath);
 
-                        exporter.ExportFBX(meshAsset, filePath, settings.MeshVersion.ToString().Replace("FBX_", ""), settings.MeshScale.ToString(), settings.FlattenMesh, settings.SingleLOD, string.Empty, settings.MeshFormat.ToString().ToLower(), meshSet);
+                        exporter.ExportFBX(meshAsset, filePath, settings.MeshVersion.ToString().Replace("FBX_", ""), settings.MeshScale.ToString(), settings.FlattenMesh, settings.SingleLOD, string.Empty, format, meshSet);
 
                         task.Update(asset.Name, (progress / (double)total) * 100.0);
                         progress++;
@@ -115,12 +115,9 @@ namespace BulkExporterPlugin.Exporters
                     FBXExporter exporter = new FBXExporter(task);
                     foreach (AssetEntry asset in assetCollection.SkinnedMeshes)
                     {
-                        var ebxAssetEntry = asset as EbxAssetEntry;
-                        if (ebxAssetEntry == null)
+                        dynamic meshAsset = GetAsset(asset);
+                        if (meshAsset == null)
                             continue;
-
-                        EbxAsset ebxAsset = App.AssetManager.GetEbx(ebxAssetEntry);
-                        dynamic meshAsset = (dynamic)ebxAsset.RootObject;
 
                         ulong resRid = meshAsset.MeshSetResource;
                         ResAssetEntry rEntry = App.AssetManager.GetResEntry(resRid);
@@ -129,12 +126,13 @@ namespace BulkExporterPlugin.Exporters
                         var filePath = CreateAssetFilePath(path, commonPath, asset.Name, settings.Flatten);
                         if (filePath.EndsWith("_mesh"))
                             filePath = filePath.Substring(0, filePath.Length - 5);
-                        filePath += '.' + settings.MeshFormat.ToString().ToLower();
+                        var format = settings.MeshFormat.ToString().ToLower();
+                        filePath += '.' + format;
                         EnsureDirectoryExists(filePath);
 
                         try
                         {
-                            exporter.ExportFBX(meshAsset, filePath, settings.MeshVersion.ToString().Replace("FBX_", ""), settings.MeshScale.ToString(), settings.FlattenMesh, settings.SingleLOD, settings.SkeletonPath, settings.MeshFormat.ToString().ToLower(), meshSet);
+                            exporter.ExportFBX(meshAsset, filePath, settings.MeshVersion.ToString().Replace("FBX_", ""), settings.MeshScale.ToString(), settings.FlattenMesh, settings.SingleLOD, settings.SkeletonPath, format, meshSet);
                             exported.SkinnedMeshCount++;
                         }
                         catch (IndexOutOfRangeException)
@@ -149,11 +147,26 @@ namespace BulkExporterPlugin.Exporters
                 }
                 if (settings.ExportTextures)
                 {
+                    var textureExporter = new TextureExporter();
                     foreach (AssetEntry asset in assetCollection.Textures)
                     {
-                        //TODO: export texture asset
+                        dynamic textureAsset = GetAsset(asset);
+                        if (textureAsset == null)
+                            continue;
+
+                        ResAssetEntry resEntry = App.AssetManager.GetResEntry(textureAsset.Resource);
+                        Texture texture = App.AssetManager.GetResAs<Texture>(resEntry);
+
+                        var filePath = CreateAssetFilePath(path, commonPath, asset.Name, settings.Flatten);
+                        var format = settings.TextureFormat.ToString().ToLower();
+                        filePath += '.' + format;
+                        EnsureDirectoryExists(filePath);
+
+                        textureExporter.Export(texture, filePath, "*." + format);
+
                         task.Update(asset.Name, (progress / (double)total) * 100.0);
                         progress++;
+                        exported.TextureCount++;
                     }
                     App.Logger.Log("Bulk Exported {0} textureAssets to {1}", exported.TextureCount, path);
                 }
@@ -164,6 +177,7 @@ namespace BulkExporterPlugin.Exporters
                         //TODO: export audio asset
                         task.Update(asset.Name, (progress / (double)total) * 100.0);
                         progress++;
+                        exported.AudioCount++;
                     }
                     App.Logger.Log("Bulk Exported {0} audioAssets to {1}", exported.AudioCount, path);
                 }
@@ -172,6 +186,16 @@ namespace BulkExporterPlugin.Exporters
                 App.Logger.Log("Bulk Exported total of {0} assets to {1}", exported.Total, path);
             });
 
+        }
+
+        private static dynamic GetAsset(AssetEntry asset)
+        {
+            var ebxAssetEntry = asset as EbxAssetEntry;
+            if (ebxAssetEntry == null)
+                return null;
+
+            EbxAsset ebxAsset = App.AssetManager.GetEbx(ebxAssetEntry);
+            return (dynamic)ebxAsset.RootObject;
         }
 
         private static string CreateAssetFilePath(string rootPath, string commonPath, string assetName, bool flatten)
