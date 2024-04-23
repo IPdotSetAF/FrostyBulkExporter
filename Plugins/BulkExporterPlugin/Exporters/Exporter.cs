@@ -17,12 +17,7 @@ namespace BulkExporterPlugin.Exporters
 {
     public static class Exporter
     {
-        public static IEnumerable<AssetEntry> EnumerateMeshAssets(string path)
-        {
-            var assets = EnumerateAssets(path, "CompositeMeshAsset").ToList();
-            assets.AddRange(EnumerateAssets(path, "RigidMeshAsset"));
-            return assets;
-        }
+        public static IEnumerable<AssetEntry> EnumerateMeshAssets(string path) => EnumerateAssets(path, "CompositeMeshAsset", "RigidMeshAsset");
 
         public static IEnumerable<AssetEntry> EnumerateSkinnedMeshAssets(string path) => EnumerateAssets(path, "SkinnedMeshAsset");
 
