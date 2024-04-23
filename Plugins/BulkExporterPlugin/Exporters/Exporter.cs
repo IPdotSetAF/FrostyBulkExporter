@@ -6,14 +6,11 @@ using FrostySdk.Managers;
 using FrostySdk.Resources;
 using MeshSetPlugin;
 using MeshSetPlugin.Resources;
+using SoundEditorPlugin;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition.Primitives;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TexturePlugin;
 
 namespace BulkExporterPlugin.Exporters
@@ -31,18 +28,19 @@ namespace BulkExporterPlugin.Exporters
 
         public static IEnumerable<AssetEntry> EnumerateTextureAssets(string path) => EnumerateAssets(path, "TextureAsset");
 
-        public static IEnumerable<AssetEntry> EnumerateAudioAssets(string path) => EnumerateAssets(path, "NewWaveAsset");
+        public static IEnumerable<AssetEntry> EnumerateAudioAssets(string path) => EnumerateAssets(path, AudioExporter.assetTypes);
 
-        public static IEnumerable<AssetEntry> EnumerateAssets(string path, string type)
+        public static IEnumerable<AssetEntry> EnumerateAssets(string path, params string[] types)
         {
             path = path.Trim('/');
             List<AssetEntry> items = new List<AssetEntry>();
 
-            foreach (AssetEntry entry in App.AssetManager.EnumerateEbx(type: type))
-            {
-                if (entry.Path.StartsWith(path, StringComparison.OrdinalIgnoreCase))
-                    items.Add(entry);
-            }
+            foreach (var type in types)
+                foreach (AssetEntry entry in App.AssetManager.EnumerateEbx(type: type))
+                {
+                    if (entry.Path.StartsWith(path, StringComparison.OrdinalIgnoreCase))
+                        items.Add(entry);
+                }
 
             return items;
         }
@@ -172,10 +170,29 @@ namespace BulkExporterPlugin.Exporters
                 }
                 if (settings.ExportAudio)
                 {
+                    var audioExporter = new AudioExporter();
                     foreach (AssetEntry asset in assetCollection.Audios)
                     {
-                        //TODO: export audio asset
-                        task.Update(asset.Name, (progress / (double)total) * 100.0);
+                        var ebxAssetEntry = asset as EbxAssetEntry;
+                        if (ebxAssetEntry == null)
+                            continue;
+
+                        IEnumerable<SoundDataTrack> tracks = audioExporter.EnumerateTracks(ebxAssetEntry);
+
+                        var trackCounts = tracks.Count();
+                        if (trackCounts == 0)
+                            continue;
+
+                        var filePath = CreateAssetFilePath(path, commonPath, asset.Name, settings.Flatten);
+
+                        foreach (var track in tracks)
+                        {
+                            var trackPath = filePath + (trackCounts > 1 ? '_' + track.Name : "") + ".wav";
+                            EnsureDirectoryExists(trackPath);
+                            audioExporter.Export(track, trackPath);
+                            task.Update(asset.Name + '_' + track.Name, (progress / (double)total) * 100.0);
+                        }
+
                         progress++;
                         exported.AudioCount++;
                     }
@@ -210,7 +227,7 @@ namespace BulkExporterPlugin.Exporters
 
         private static void EnsureDirectoryExists(string filePath)
         {
-            var directory = Path.GetDirectoryName(filePath);
+            var directory = System.IO.Path.GetDirectoryName(filePath);
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
         }

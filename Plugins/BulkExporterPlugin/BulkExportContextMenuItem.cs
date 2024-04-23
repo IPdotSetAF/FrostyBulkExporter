@@ -12,11 +12,6 @@ using BulkExporterPlugin.Exporters;
 using BulkExporterPlugin.Models;
 using BulkExporterPlugin.Windows;
 using Frosty.Core;
-using Frosty.Core.Controls;
-using Frosty.Core.Legacy;
-using Frosty.Core.Windows;
-using FrostySdk.IO;
-using FrostySdk.Managers;
 using Microsoft.Win32;
 
 namespace BulkExporterPlugin
