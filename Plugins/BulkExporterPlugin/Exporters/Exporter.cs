@@ -62,13 +62,7 @@ namespace BulkExporterPlugin.Exporters
                         (settings.ExportTextures ? assetCounts.TextureCount : 0) +
                         (settings.ExportAudio ? assetCounts.AudioCount : 0);
 
-            var exported = new AssetCount
-            {
-                MeshCount = 0,
-                SkinnedMeshCount = 0,
-                TextureCount = 0,
-                AudioCount = 0
-            };
+            var exported = new AssetCount();
 
             FrostyTaskWindow.Show("Bulk Exporting Assets", "", (task) =>
             {
