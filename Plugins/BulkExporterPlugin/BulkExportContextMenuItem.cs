@@ -12,6 +12,7 @@ using BulkExporterPlugin.Exporters;
 using BulkExporterPlugin.Models;
 using BulkExporterPlugin.Windows;
 using Frosty.Core;
+using Frosty.Core.Windows;
 using Microsoft.Win32;
 
 namespace BulkExporterPlugin
@@ -50,9 +51,7 @@ namespace BulkExporterPlugin
                 exportPath = exportPath.Replace("\\select.this.directory", "");
                 exportPath = exportPath.Replace(".this.directory", "");
                 if (!Directory.Exists(exportPath))
-                {
                     Directory.CreateDirectory(exportPath);
-                }
             }
             else
                 return;
@@ -60,6 +59,7 @@ namespace BulkExporterPlugin
             assets.ExportAssets(exportPath + '\\' + selectedPath.Split('/').Last(), exportConfig);
 
             App.EditorWindow.DataExplorer.RefreshAll();
+
         });
     }
 }

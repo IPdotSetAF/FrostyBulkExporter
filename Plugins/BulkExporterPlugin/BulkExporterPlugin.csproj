@@ -42,6 +42,10 @@
   
   <ItemGroup>
     <None Remove="Images\BulkExporter.png" />
+    <None Remove="Images\Exclude.png" />
+    <None Remove="Images\ExcludeRecursive.png" />
+    <None Remove="Images\Include.png" />
+    <None Remove="Images\IncludeRecursive.png" />
   </ItemGroup>
   
   <ItemGroup>
@@ -64,5 +68,9 @@
   
   <ItemGroup>
     <Resource Include="Images\BulkExporter.png" />
+    <Resource Include="Images\Exclude.png" />
+    <Resource Include="Images\ExcludeRecursive.png" />
+    <Resource Include="Images\Include.png" />
+    <Resource Include="Images\IncludeRecursive.png" />
   </ItemGroup>
 </Project>

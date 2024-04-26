@@ -33,20 +33,17 @@
                                     <RowDefinition/>
                                 </Grid.RowDefinitions>
                                 <DockPanel Grid.Row="0" LastChildFill="True" Background="{StaticResource ControlBackground}">
-                                    <CheckBox x:Name="PART_Flatten" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
-                                    <Label Content="Flatten" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
-
                                     <CheckBox x:Name="PART_Texture" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
-                                    <Label Content="Export Textures" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
+                                    <Label Content="Texture" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
 
                                     <CheckBox x:Name="PART_Mesh" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
-                                    <Label Content="Export Meshes" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
+                                    <Label Content="Mesh" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
 
                                     <CheckBox x:Name="PART_SkinnedMesh" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
-                                    <Label Content="Export Skinned Meshes" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
+                                    <Label Content="Skinned Mesh" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
 
                                     <CheckBox x:Name="PART_Audio" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
-                                    <Label Content="Export Audio" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
+                                    <Label Content="Audio" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
 
                                     <Border Background="{StaticResource ControlBackground}"
                                             Margin="1 0 0 0"
@@ -123,19 +120,7 @@
                                     <RowDefinition/>
                                 </Grid.RowDefinitions>
 
-                                <core:FrostyDataExplorer x:Name="PART_DataExplorer" Grid.Row="0">
-                                    <core:FrostyDataExplorer.ExplorerContextMenu>
-                                        <ContextMenu>
-                                            <MenuItem Header="Include"/>
-                                            <MenuItem Header="Recursive Include"/>
-                                        </ContextMenu>
-                                    </core:FrostyDataExplorer.ExplorerContextMenu>
-                                    <core:FrostyDataExplorer.AssetContextMenu>
-                                        <ContextMenu>
-                                            <MenuItem Header="Include"/>
-                                        </ContextMenu>
-                                    </core:FrostyDataExplorer.AssetContextMenu>
-                                </core:FrostyDataExplorer>
+                                <core:FrostyDataExplorer x:Name="PART_DataExplorer" Grid.Row="0"/>
                             </Grid>
 
                         </Grid>

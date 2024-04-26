@@ -14,13 +14,16 @@ using FrostySdk;
 using System.ComponentModel;
 using System.Linq;
 using System.Collections.Generic;
+using BulkExporterPlugin.Exporters;
+using BulkExporterPlugin.Models;
+using BulkExporterPlugin.Windows;
+using Microsoft.Win32;
 
 namespace BulkExporterPlugin.Editors
 {
     [TemplatePart(Name = PART_AssetTreeView, Type = typeof(TreeView))]
     [TemplatePart(Name = PART_DataExplorer, Type = typeof(FrostyDataExplorer))]
     [TemplatePart(Name = PART_AssetFilter, Type = typeof(TextBox))]
-    [TemplatePart(Name = PART_Flatten, Type = typeof(CheckBox))]
     [TemplatePart(Name = PART_Mesh, Type = typeof(CheckBox))]
     [TemplatePart(Name = PART_SkinnedMesh, Type = typeof(CheckBox))]
     [TemplatePart(Name = PART_Audio, Type = typeof(CheckBox))]
@@ -33,17 +36,15 @@ namespace BulkExporterPlugin.Editors
         private const string PART_AssetTreeView = "PART_AssetTreeView";
         private const string PART_DataExplorer = "PART_DataExplorer";
         private const string PART_AssetFilter = "PART_AssetFilter";
-        private const string PART_Flatten = "PART_Flatten";
         private const string PART_Texture = "PART_Texture";
         private const string PART_Mesh = "PART_Mesh";
         private const string PART_SkinnedMesh = "PART_SkinnedMesh";
         private const string PART_Audio = "PART_Audio";
         private const string PART_ExportButton = "PART_ExportButton";
 
-        private TreeView AssetTreeView;
+        private TreeView assetTreeView;
         private FrostyDataExplorer dataExplorer;
         private TextBox assetFilterTextBox;
-        private CheckBox flattenCheck;
         private CheckBox meshCheck;
         private CheckBox textureCheck;
         private CheckBox audioCheck;
@@ -65,10 +66,9 @@ namespace BulkExporterPlugin.Editors
         {
             base.OnApplyTemplate();
 
-            AssetTreeView = GetTemplateChild(PART_AssetTreeView) as TreeView;
+            assetTreeView = GetTemplateChild(PART_AssetTreeView) as TreeView;
             dataExplorer = GetTemplateChild(PART_DataExplorer) as FrostyDataExplorer;
             assetFilterTextBox = GetTemplateChild(PART_AssetFilter) as TextBox;
-            flattenCheck = GetTemplateChild(PART_Flatten) as CheckBox;
             meshCheck = GetTemplateChild(PART_Mesh) as CheckBox;
             textureCheck = GetTemplateChild(PART_Texture) as CheckBox;
             skinnedMeshCheck = GetTemplateChild(PART_SkinnedMesh) as CheckBox;
@@ -76,6 +76,42 @@ namespace BulkExporterPlugin.Editors
             textureCheck = GetTemplateChild(PART_Texture) as CheckBox;
             exportButton = GetTemplateChild(PART_ExportButton) as Button;
             exportButton.Click += ExportButton_Click;
+
+            assetTreeView.ContextMenu = new ContextMenu();
+            assetTreeView.ContextMenu.Items.Add(new MenuItem
+            {
+                Icon = GetImage("Exclude.png"),
+                Header = "Exclude",
+                Command = ExcludeClick
+            });
+            assetTreeView.ContextMenu.Items.Add(new MenuItem
+            {
+                Icon = GetImage("ExcludeRecursive.png"),
+                Header = "Exclude Recursive",
+                Command = ExcludeRecursiveClick
+            });
+
+            dataExplorer.ExplorerContextMenu = new ContextMenu();
+            dataExplorer.ExplorerContextMenu.Items.Add(new MenuItem
+            {
+                Icon = GetImage("Include.png"),
+                Header = "Include",
+                Command = IncludeClick
+            });
+            dataExplorer.ExplorerContextMenu.Items.Add(new MenuItem
+            {
+                Icon = GetImage("IncludeRecursive.png"),
+                Header = "Include Recursive",
+                Command = IncludeRecursiveClick
+            });
+            dataExplorer.AssetContextMenu = new ContextMenu();
+            dataExplorer.AssetContextMenu.Items.Add(new MenuItem
+            {
+                Icon = GetImage("Include.png"),
+                Header = "Include",
+                Command = IncludeClick
+            });
+
 
             dataExplorer.SelectionChanged += ResExplorer_SelectionChanged;
 
@@ -91,6 +127,26 @@ namespace BulkExporterPlugin.Editors
             dataExplorer.ItemsSource = App.AssetManager.EnumerateEbx();
             UpdateTreeView();
         }
+
+        private RelayCommand ExcludeClick => new RelayCommand((o) =>
+        {
+            logger.Log("exclude");
+        });
+
+        private RelayCommand ExcludeRecursiveClick => new RelayCommand((o) =>
+        {
+            logger.Log("exclude recursive");
+        });
+
+        private RelayCommand IncludeClick => new RelayCommand((o) =>
+        {
+            logger.Log("include");
+        });
+
+        private RelayCommand IncludeRecursiveClick => new RelayCommand((o) =>
+        {
+            logger.Log("include recursive");
+        });
 
         public void ExportButton_Click(object sender, RoutedEventArgs e)
         {
@@ -182,6 +238,14 @@ namespace BulkExporterPlugin.Editors
             //}
         }
 
+        private Image GetImage(string name)
+        {
+            return new Image()
+            {
+                Source = new ImageSourceConverter().ConvertFromString($"pack://application:,,,/BulkExporterPlugin;component/Images/{name}") as ImageSource
+            };
+        }
+
         private Dictionary<string, AssetPath> assetPathMapping = new Dictionary<string, AssetPath>(StringComparer.OrdinalIgnoreCase);
 
         private void UpdateTreeView()
@@ -239,8 +303,8 @@ namespace BulkExporterPlugin.Editors
                 assetPathMapping.Add("/", new AssetPath("![root]", "", null, true));
             root.Children.Insert(0, assetPathMapping["/"]);
 
-            AssetTreeView.ItemsSource = root.Children;
-            AssetTreeView.Items.SortDescriptions.Add(new SortDescription("PathName", ListSortDirection.Ascending));
+            assetTreeView.ItemsSource = root.Children;
+            assetTreeView.Items.SortDescriptions.Add(new SortDescription("PathName", ListSortDirection.Ascending));
         }
     }
 
