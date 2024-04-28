@@ -6,10 +6,10 @@ namespace BulkExporterPlugin.Models
 {
     public class AssetCollection
     {
-        public IEnumerable<AssetEntry> Meshes { get; set; }
-        public IEnumerable<AssetEntry> SkinnedMeshes { get; set; }
-        public IEnumerable<AssetEntry> Textures { get; set; }
-        public IEnumerable<AssetEntry> Audios { get; set; }
+        public IEnumerable<EbxAssetEntry> Meshes { get; set; }
+        public IEnumerable<EbxAssetEntry> SkinnedMeshes { get; set; }
+        public IEnumerable<EbxAssetEntry> Textures { get; set; }
+        public IEnumerable<EbxAssetEntry> Audios { get; set; }
 
         public AssetCount GetCounts()
         {

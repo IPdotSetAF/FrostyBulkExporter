@@ -21,9 +21,8 @@ using Microsoft.Win32;
 
 namespace BulkExporterPlugin.Editors
 {
-    [TemplatePart(Name = PART_AssetTreeView, Type = typeof(TreeView))]
+    [TemplatePart(Name = PART_SelectedDataExplorer, Type = typeof(FrostyDataExplorer))]
     [TemplatePart(Name = PART_DataExplorer, Type = typeof(FrostyDataExplorer))]
-    [TemplatePart(Name = PART_AssetFilter, Type = typeof(TextBox))]
     [TemplatePart(Name = PART_Mesh, Type = typeof(CheckBox))]
     [TemplatePart(Name = PART_SkinnedMesh, Type = typeof(CheckBox))]
     [TemplatePart(Name = PART_Audio, Type = typeof(CheckBox))]
@@ -33,18 +32,21 @@ namespace BulkExporterPlugin.Editors
     {
         public override ImageSource Icon => BulkExporterMenuExtension.imageSource;
 
-        private const string PART_AssetTreeView = "PART_AssetTreeView";
+        private const string PART_SelectedDataExplorer = "PART_SelectedDataExplorer";
         private const string PART_DataExplorer = "PART_DataExplorer";
-        private const string PART_AssetFilter = "PART_AssetFilter";
         private const string PART_Texture = "PART_Texture";
         private const string PART_Mesh = "PART_Mesh";
         private const string PART_SkinnedMesh = "PART_SkinnedMesh";
         private const string PART_Audio = "PART_Audio";
         private const string PART_ExportButton = "PART_ExportButton";
 
-        private TreeView assetTreeView;
+        private AssetCollection _assetCollection;
+        private AssetCount _assetCount;
+        private List<string> _included_paths = new List<string>();
+        private List<string> _excluded_paths = new List<string>();
+
+        private FrostyDataExplorer selectedDataExplorer;
         private FrostyDataExplorer dataExplorer;
-        private TextBox assetFilterTextBox;
         private CheckBox meshCheck;
         private CheckBox textureCheck;
         private CheckBox audioCheck;
@@ -57,18 +59,17 @@ namespace BulkExporterPlugin.Editors
             DefaultStyleKeyProperty.OverrideMetadata(typeof(BulkExporter), new FrameworkPropertyMetadata(typeof(BulkExporter)));
         }
 
-        public BulkExporter(ILogger inLogger = null)
+        public BulkExporter(ILogger logger = null)
         {
-            logger = inLogger;
+            this.logger = logger;
         }
 
         public override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
 
-            assetTreeView = GetTemplateChild(PART_AssetTreeView) as TreeView;
+            selectedDataExplorer = GetTemplateChild(PART_SelectedDataExplorer) as FrostyDataExplorer;
             dataExplorer = GetTemplateChild(PART_DataExplorer) as FrostyDataExplorer;
-            assetFilterTextBox = GetTemplateChild(PART_AssetFilter) as TextBox;
             meshCheck = GetTemplateChild(PART_Mesh) as CheckBox;
             textureCheck = GetTemplateChild(PART_Texture) as CheckBox;
             skinnedMeshCheck = GetTemplateChild(PART_SkinnedMesh) as CheckBox;
@@ -77,165 +78,142 @@ namespace BulkExporterPlugin.Editors
             exportButton = GetTemplateChild(PART_ExportButton) as Button;
             exportButton.Click += ExportButton_Click;
 
-            assetTreeView.ContextMenu = new ContextMenu();
-            assetTreeView.ContextMenu.Items.Add(new MenuItem
+            selectedDataExplorer.ExplorerContextMenu = new ContextMenu();
+            selectedDataExplorer.ExplorerContextMenu.Items.Add(new MenuItem
             {
-                Icon = GetImage("Exclude.png"),
+                Icon = GetImage("ExcludeRecursive.png"),
                 Header = "Exclude",
                 Command = ExcludeClick
             });
-            assetTreeView.ContextMenu.Items.Add(new MenuItem
+            selectedDataExplorer.AssetContextMenu = new ContextMenu();
+            selectedDataExplorer.AssetContextMenu.Items.Add(new MenuItem
             {
-                Icon = GetImage("ExcludeRecursive.png"),
-                Header = "Exclude Recursive",
-                Command = ExcludeRecursiveClick
+                Icon = GetImage("Exclude.png"),
+                Header = "Exclude",
+                Command = ExcludeAssetClick
             });
 
             dataExplorer.ExplorerContextMenu = new ContextMenu();
             dataExplorer.ExplorerContextMenu.Items.Add(new MenuItem
             {
-                Icon = GetImage("Include.png"),
+                Icon = GetImage("IncludeRecursive.png"),
                 Header = "Include",
                 Command = IncludeClick
-            });
-            dataExplorer.ExplorerContextMenu.Items.Add(new MenuItem
-            {
-                Icon = GetImage("IncludeRecursive.png"),
-                Header = "Include Recursive",
-                Command = IncludeRecursiveClick
             });
             dataExplorer.AssetContextMenu = new ContextMenu();
             dataExplorer.AssetContextMenu.Items.Add(new MenuItem
             {
                 Icon = GetImage("Include.png"),
                 Header = "Include",
-                Command = IncludeClick
+                Command = IncludeAssetClick
             });
 
-
-            dataExplorer.SelectionChanged += ResExplorer_SelectionChanged;
-
             Loaded += BulkExporter_Loaded;
-            assetFilterTextBox.LostFocus += AssetFilterTextBox_LostFocus;
-            assetFilterTextBox.KeyUp += AssetFilterTextBox_KeyUp;
         }
+
         private void BulkExporter_Loaded(object sender, RoutedEventArgs e)
         {
             if (dataExplorer.ItemsSource != null)
                 return;
 
-            dataExplorer.ItemsSource = App.AssetManager.EnumerateEbx();
-            UpdateTreeView();
+            var assets = Exporter.EnumerateAllAssets(new[] { "/" }, Array.Empty<string>());
+
+            dataExplorer.ItemsSource = assets.Meshes
+                .Concat(assets.SkinnedMeshes)
+                .Concat(assets.Textures)
+                .Concat(assets.Audios);
+
+            UpdateSelectedAssets();
         }
 
         private RelayCommand ExcludeClick => new RelayCommand((o) =>
         {
-            logger.Log("exclude");
+            var path = selectedDataExplorer.SelectedPath;
+
+            if (_excluded_paths.Contains(path))
+                return;
+            _included_paths.Remove(path);
+            _excluded_paths.Add(path);
+
+            UpdateSelectedAssets();
         });
 
-        private RelayCommand ExcludeRecursiveClick => new RelayCommand((o) =>
+        private RelayCommand ExcludeAssetClick => new RelayCommand((o) =>
         {
-            logger.Log("exclude recursive");
+            var asset = selectedDataExplorer.SelectedAsset as EbxAssetEntry;
+            string path = asset.Name;
+
+            if (_excluded_paths.Contains(path))
+                return;
+            _included_paths.Remove(path);
+            _excluded_paths.Add(path);
+
+            UpdateSelectedAssets();
         });
 
         private RelayCommand IncludeClick => new RelayCommand((o) =>
         {
-            logger.Log("include");
+            var path = dataExplorer.SelectedPath;
+
+            if (_included_paths.Contains(path))
+                return;
+            _excluded_paths.Remove(path);
+            _included_paths.Add(path);
+
+            UpdateSelectedAssets();
         });
 
-        private RelayCommand IncludeRecursiveClick => new RelayCommand((o) =>
+        private RelayCommand IncludeAssetClick => new RelayCommand((o) =>
         {
-            logger.Log("include recursive");
+            var asset = dataExplorer.SelectedAsset as EbxAssetEntry;
+            string path = asset.Name;
+
+            if (_included_paths.Contains(path))
+                return;
+            _excluded_paths.Remove(path);
+            _included_paths.Add(path);
+
+            UpdateSelectedAssets();
         });
 
         public void ExportButton_Click(object sender, RoutedEventArgs e)
         {
-            logger.Log("Export Clicked");
+            AssetCollection assets = Exporter.EnumerateAllAssets(_included_paths.ToArray(), _excluded_paths.ToArray());
+            AssetCount assetCounts = assets.GetCounts();
 
+            BulkExportWindow win = new BulkExportWindow(assetCounts);
+            win.ExportSetting.ExportMeshes = meshCheck.IsChecked == true;
+            win.ExportSetting.ExportSkinnedMeshes = skinnedMeshCheck.IsChecked == true;
+            win.ExportSetting.ExportTextures = textureCheck.IsChecked == true;
+            win.ExportSetting.ExportAudio = audioCheck.IsChecked == true;
+            if (win.ShowDialog() == false)
+                return;
 
-            //ResAssetEntry selectedAsset = resExplorer.SelectedAsset as ResAssetEntry;
-            //FrostySaveFileDialog sfd = new FrostySaveFileDialog("Save Resource", "*.res (Resource Files)|*.res", "Res", selectedAsset.Filename);
+            var exportConfig = win.ExportSetting;
 
-            //Stream resStream = App.AssetManager.GetRes(selectedAsset);
-            //if (resStream == null)
-            //    return;
+            var dialog = new SaveFileDialog
+            {
+                Title = "Select Export Directory",
+                Filter = "Directory|*.this.directory",
+                FileName = "select"
+            };
 
-            //if (sfd.ShowDialog())
-            //{
-            //    FrostyTaskWindow.Show("Exporting Asset", "", (task) =>
-            //    {
-            //        using (NativeWriter writer = new NativeWriter(new FileStream(sfd.FileName, FileMode.Create)))
-            //        {
-            //            // write res meta first
-            //            writer.Write(selectedAsset.ResMeta);
+            string exportPath = "";
 
-            //            // followed by remaining data
-            //            using (NativeReader reader = new NativeReader(resStream))
-            //                writer.Write(reader.ReadToEnd());
-            //        }
-            //    });
-            //    logger?.Log("Resource saved to {0}", sfd.FileName);
-            //}
-        }
+            if (dialog.ShowDialog() == true)
+            {
+                exportPath = dialog.FileName;
+                exportPath = exportPath.Replace("\\select.this.directory", "");
+                exportPath = exportPath.Replace(".this.directory", "");
+                if (!Directory.Exists(exportPath))
+                    Directory.CreateDirectory(exportPath);
+            }
+            else
+                return;
 
-        private void ResExplorer_SelectionChanged(object sender, RoutedEventArgs e)
-        {
-            logger.Log("Selection Changed");
-            //if (resExplorer.SelectedAsset != null)
-            //{
-            //    resBundleBox.Items.Clear();
-            //    ResAssetEntry SelectedRes = (ResAssetEntry)resExplorer.SelectedAsset;
-            //    resBundleBox.Items.Add("Selected resource is in Bundles: ");
-            //    foreach (int bundle in SelectedRes.Bundles)
-            //    {
-            //        resBundleBox.Items.Add(App.AssetManager.GetBundleEntry(bundle).Name);
-            //    }
-            //    if (SelectedRes.AddedBundles.Count != 0)
-            //    {
-            //        resBundleBox.Items.Add("Added to Bundles:");
-            //        foreach (int bundle in SelectedRes.AddedBundles)
-            //        {
-            //            resBundleBox.Items.Add(App.AssetManager.GetBundleEntry(bundle).Name);
-            //        }
-            //    }
-            //}
-            //else
-            //{
-            //    resBundleBox.Items.Clear();
-            //    resBundleBox.Items.Add("No res selected");
-            //}
-        }
+            assets.ExportAssets(exportPath, exportConfig);
 
-        private void AssetFilterTextBox_KeyUp(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter)
-                UpdateFilter();
-        }
-
-        private void AssetFilterTextBox_LostFocus(object sender, RoutedEventArgs e)
-        {
-            UpdateFilter();
-        }
-
-        private void UpdateFilter()
-        {
-            //if (assetFilterTextBox.Text == "" && meshCheck.IsChecked == false && textureCheck.IsChecked == false)
-            //{
-            //    chunksListBox.Items.Filter = null;
-            //    return;
-            //}
-            //else if (assetFilterTextBox.Text != "" && meshCheck.IsChecked == false && textureCheck.IsChecked == false)
-            //{
-            //    chunksListBox.Items.Filter = new Predicate<object>((object a) => ((ChunkAssetEntry)a).Id.ToString().Contains(assetFilterTextBox.Text.ToLower()));
-            //}
-            //else if (assetFilterTextBox.Text == "" && meshCheck.IsChecked == false && textureCheck.IsChecked == false)
-            //{
-            //    chunksListBox.Items.Filter = new Predicate<object>((object a) => ((ChunkAssetEntry)a).IsModified);
-            //}
-            //else if (assetFilterTextBox.Text != "" && meshCheck.IsChecked == false && textureCheck.IsChecked == false)
-            //{
-            //    chunksListBox.Items.Filter = new Predicate<object>((object a) => (((ChunkAssetEntry)a).IsModified) & ((ChunkAssetEntry)a).Id.ToString().Contains(assetFilterTextBox.Text.ToLower()));
-            //}
+            App.EditorWindow.DataExplorer.RefreshAll();
         }
 
         private Image GetImage(string name)
@@ -246,99 +224,14 @@ namespace BulkExporterPlugin.Editors
             };
         }
 
-        private Dictionary<string, AssetPath> assetPathMapping = new Dictionary<string, AssetPath>(StringComparer.OrdinalIgnoreCase);
-
-        private void UpdateTreeView()
+        private void UpdateSelectedAssets()
         {
-            var ItemsSource = App.AssetManager.EnumerateEbx();
+            var assets = Exporter.EnumerateAllAssets(_included_paths.ToArray(), _excluded_paths.ToArray());
 
-            AssetPath root = new AssetPath("", "", null);
-            foreach (AssetEntry entry in ItemsSource)
-            {
-                //if (!FilterText(entry.Name, entry))
-                //    continue;
-
-                string[] arr = entry.Path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-                AssetPath next = root;
-
-                foreach (string path in arr)
-                {
-                    bool bFound = false;
-                    foreach (AssetPath child in next.Children)
-                    {
-                        if (child.PathName.Equals(path, StringComparison.OrdinalIgnoreCase))
-                        {
-                            if (path.ToCharArray().Any(char.IsUpper))
-                                child.UpdatePathName(path);
-
-                            next = child;
-                            bFound = true;
-                            break;
-                        }
-                    }
-
-                    if (!bFound)
-                    {
-                        string fullPath = next.FullPath + "/" + path;
-                        AssetPath newPath = null;
-
-                        if (!assetPathMapping.ContainsKey(fullPath))
-                        {
-                            newPath = new AssetPath(path, fullPath, next);
-                            assetPathMapping.Add(fullPath, newPath);
-                        }
-                        else
-                        {
-                            newPath = assetPathMapping[fullPath];
-                            newPath.Children.Clear();
-                        }
-
-                        next.Children.Add(newPath);
-                        next = newPath;
-                    }
-                }
-            }
-
-            if (!assetPathMapping.ContainsKey("/"))
-                assetPathMapping.Add("/", new AssetPath("![root]", "", null, true));
-            root.Children.Insert(0, assetPathMapping["/"]);
-
-            assetTreeView.ItemsSource = root.Children;
-            assetTreeView.Items.SortDescriptions.Add(new SortDescription("PathName", ListSortDirection.Ascending));
-        }
-    }
-
-    internal class AssetPath
-    {
-        private static readonly ImageSource ClosedImage = new ImageSourceConverter().ConvertFromString("pack://application:,,,/FrostyEditor;component/Images/CloseFolder.png") as ImageSource;
-        private static readonly ImageSource OpenImage = new ImageSourceConverter().ConvertFromString("pack://application:,,,/FrostyEditor;component/Images/OpenFolder.png") as ImageSource;
-
-        public string DisplayName => PathName.Trim('!');
-        public string PathName { get; private set; }
-        public string FullPath { get; }
-        public AssetPath Parent { get; }
-        public List<AssetPath> Children { get; } = new List<AssetPath>();
-        public bool IsSelected { get; set; }
-        public bool IsRoot { get; }
-
-        public bool IsExpanded
-        {
-            get => expanded && Children.Count != 0;
-            set => expanded = value;
-        }
-        private bool expanded;
-
-        public AssetPath(string inName, string path, AssetPath inParent, bool bInRoot = false)
-        {
-            PathName = inName;
-            FullPath = path;
-            IsRoot = bInRoot;
-            Parent = inParent;
-        }
-
-        public void UpdatePathName(string newName)
-        {
-            PathName = newName;
+            selectedDataExplorer.ItemsSource = assets.Meshes
+                .Concat(assets.SkinnedMeshes)
+                .Concat(assets.Textures)
+                .Concat(assets.Audios);
         }
     }
 }

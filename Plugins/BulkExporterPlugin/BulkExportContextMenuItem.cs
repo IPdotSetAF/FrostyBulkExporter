@@ -27,7 +27,7 @@ namespace BulkExporterPlugin
         {
             string selectedPath = App.SelectedPath;
 
-            AssetCollection assets = Exporter.EnumerateAllAssets(selectedPath);
+            AssetCollection assets = Exporter.EnumerateAllAssets(new []{selectedPath}, Array.Empty<string>());
             AssetCount assetCounts = assets.GetCounts();
 
             BulkExportWindow win = new BulkExportWindow(assetCounts);

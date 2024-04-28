@@ -11,43 +11,58 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Windows.Shapes;
 using TexturePlugin;
 
 namespace BulkExporterPlugin.Exporters
 {
     public static class Exporter
     {
-        public static IEnumerable<AssetEntry> EnumerateMeshAssets(string path) => EnumerateAssets(path, "CompositeMeshAsset", "RigidMeshAsset");
+        public static string[] MeshAssetTypes = { "CompositeMeshAsset", "RigidMeshAsset" };
+        public static string[] SkinnedMeshAssetTypes = { "SkinnedMeshAsset" };
+        public static string[] TextureAssetTypes = { "TextureAsset" };
+        public static string[] AudioAssetTypes = AudioExporter.assetTypes;
 
-        public static IEnumerable<AssetEntry> EnumerateSkinnedMeshAssets(string path) => EnumerateAssets(path, "SkinnedMeshAsset");
-
-        public static IEnumerable<AssetEntry> EnumerateTextureAssets(string path) => EnumerateAssets(path, "TextureAsset");
-
-        public static IEnumerable<AssetEntry> EnumerateAudioAssets(string path) => EnumerateAssets(path, AudioExporter.assetTypes);
-
-        public static IEnumerable<AssetEntry> EnumerateAssets(string path, params string[] types)
+        private static IEnumerable<EbxAssetEntry> EnumerateAssets(string[] paths, string[] excludePaths, params string[] types)
         {
-            path = path.Trim('/');
-            List<AssetEntry> items = new List<AssetEntry>();
+            List<EbxAssetEntry> items = new List<EbxAssetEntry>();
 
             foreach (var type in types)
-                foreach (AssetEntry entry in App.AssetManager.EnumerateEbx(type: type))
+                foreach (EbxAssetEntry entry in App.AssetManager.EnumerateEbx(type: type))
                 {
-                    if (entry.Path.StartsWith(path, StringComparison.OrdinalIgnoreCase))
+                    var includes = paths.Where(path => entry.Path.StartsWith(path, StringComparison.OrdinalIgnoreCase)).ToArray();
+                    var excludes = excludePaths.Where(path => entry.Path.StartsWith(path, StringComparison.OrdinalIgnoreCase)).ToArray();
+
+                    if (excludes.Length > 0)
+                    {
+                        if (includes.Length == 0)
+                            continue;
+
+                        if (includes.Max(s => s.Length) < excludes.Max(s => s.Length))
+                            continue;
+                    }
+
+                    if (includes.Length > 0)
                         items.Add(entry);
                 }
 
             return items;
         }
 
-        public static AssetCollection EnumerateAllAssets(string path)
+        public static AssetCollection EnumerateAllAssets(string[] paths, string[] excludePaths)
         {
+            for (int i = 0; i < paths.Length; i++)
+                paths[i] = paths[i].Trim('/');
+
+            for (int i = 0; i < excludePaths.Length; i++)
+                excludePaths[i] = excludePaths[i].Trim('/');
+
             return new AssetCollection
             {
-                Meshes = EnumerateMeshAssets(path),
-                SkinnedMeshes = EnumerateSkinnedMeshAssets(path),
-                Textures = EnumerateTextureAssets(path),
-                Audios = EnumerateAudioAssets(path),
+                Meshes = EnumerateAssets(paths, excludePaths, MeshAssetTypes),
+                SkinnedMeshes = EnumerateAssets(paths, excludePaths, SkinnedMeshAssetTypes),
+                Textures = EnumerateAssets(paths, excludePaths, TextureAssetTypes),
+                Audios = EnumerateAssets(paths, excludePaths, AudioAssetTypes),
             };
         }
 
@@ -72,7 +87,7 @@ namespace BulkExporterPlugin.Exporters
                 if (settings.ExportMeshes)
                 {
                     FBXExporter exporter = new FBXExporter(task);
-                    foreach (AssetEntry asset in assetCollection.Meshes)
+                    foreach (EbxAssetEntry asset in assetCollection.Meshes)
                     {
                         dynamic meshAsset = GetAsset(asset);
                         if (meshAsset == null)
@@ -100,7 +115,7 @@ namespace BulkExporterPlugin.Exporters
                 if (settings.ExportSkinnedMeshes)
                 {
                     FBXExporter exporter = new FBXExporter(task);
-                    foreach (AssetEntry asset in assetCollection.SkinnedMeshes)
+                    foreach (EbxAssetEntry asset in assetCollection.SkinnedMeshes)
                     {
                         dynamic meshAsset = GetAsset(asset);
                         if (meshAsset == null)
@@ -135,7 +150,7 @@ namespace BulkExporterPlugin.Exporters
                 if (settings.ExportTextures)
                 {
                     var textureExporter = new TextureExporter();
-                    foreach (AssetEntry asset in assetCollection.Textures)
+                    foreach (EbxAssetEntry asset in assetCollection.Textures)
                     {
                         dynamic textureAsset = GetAsset(asset);
                         if (textureAsset == null)
@@ -160,13 +175,9 @@ namespace BulkExporterPlugin.Exporters
                 if (settings.ExportAudio)
                 {
                     var audioExporter = new AudioExporter();
-                    foreach (AssetEntry asset in assetCollection.Audios)
+                    foreach (EbxAssetEntry asset in assetCollection.Audios)
                     {
-                        var ebxAssetEntry = asset as EbxAssetEntry;
-                        if (ebxAssetEntry == null)
-                            continue;
-
-                        IEnumerable<SoundDataTrack> tracks = audioExporter.EnumerateTracks(ebxAssetEntry);
+                        IEnumerable<SoundDataTrack> tracks = audioExporter.EnumerateTracks(asset);
 
                         var trackCounts = tracks.Count();
                         if (trackCounts == 0)
@@ -194,13 +205,9 @@ namespace BulkExporterPlugin.Exporters
 
         }
 
-        private static dynamic GetAsset(AssetEntry asset)
+        private static dynamic GetAsset(EbxAssetEntry asset)
         {
-            var ebxAssetEntry = asset as EbxAssetEntry;
-            if (ebxAssetEntry == null)
-                return null;
-
-            EbxAsset ebxAsset = App.AssetManager.GetEbx(ebxAssetEntry);
+            EbxAsset ebxAsset = App.AssetManager.GetEbx(asset);
             return (dynamic)ebxAsset.RootObject;
         }
 

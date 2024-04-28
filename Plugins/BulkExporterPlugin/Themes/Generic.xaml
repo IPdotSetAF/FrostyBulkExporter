@@ -18,7 +18,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type editors:BulkExporter}">
                     <ControlTemplate.Resources>
-                        
+
                     </ControlTemplate.Resources>
                     <Grid Background="{StaticResource ControlBackground}">
                         <Grid Margin="2">
@@ -26,96 +26,59 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Grid Background="{StaticResource WindowBackground}">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="26"/>
-                                    <RowDefinition Height="26"/>
-                                    <RowDefinition/>
-                                </Grid.RowDefinitions>
-                                <DockPanel Grid.Row="0" LastChildFill="True" Background="{StaticResource ControlBackground}">
-                                    <CheckBox x:Name="PART_Texture" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
-                                    <Label Content="Texture" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="26"/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
 
-                                    <CheckBox x:Name="PART_Mesh" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
-                                    <Label Content="Mesh" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
+                            <DockPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" LastChildFill="True" Background="{StaticResource ControlBackground}">
+                                <CheckBox x:Name="PART_Texture" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
+                                <Label Content="Texture" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
 
-                                    <CheckBox x:Name="PART_SkinnedMesh" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
-                                    <Label Content="Skinned Mesh" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
+                                <CheckBox x:Name="PART_Mesh" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
+                                <Label Content="Mesh" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
 
-                                    <CheckBox x:Name="PART_Audio" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
-                                    <Label Content="Audio" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
+                                <CheckBox x:Name="PART_SkinnedMesh" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
+                                <Label Content="Skinned Mesh" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
 
-                                    <Border Background="{StaticResource ControlBackground}"
+                                <CheckBox x:Name="PART_Audio" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
+                                <Label Content="Audio" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
+
+                                <Border Background="{StaticResource ControlBackground}"
                                             Margin="1 0 0 0"
                                             RenderOptions.EdgeMode="Aliased">
-                                        <StackPanel Orientation="Horizontal"
+                                    <StackPanel Orientation="Horizontal"
                                                     Margin="6,2,6,2">
-                                            <Button x:Name="PART_ExportButton"
+                                        <Button x:Name="PART_ExportButton"
                                                     Margin="0"
                                                     ToolTip="Export selected files."
                                                     IsEnabled="true">
-                                                <StackPanel Orientation="Horizontal"
+                                            <StackPanel Orientation="Horizontal"
                                                             Margin="4 0 4 0">
-                                                    <Image Grid.Column="0"
+                                                <Image Grid.Column="0"
                                                            Source="pack://application:,,,/BulkExporterPlugin;component/Images/BulkExporter.png"
                                                            Width="16" />
-                                                    <TextBlock Grid.Column="1"
+                                                <TextBlock Grid.Column="1"
                                                                Text="Bulk Export"
                                                                VerticalAlignment="Center"
                                                                Margin="4 0 0 0" />
-                                                </StackPanel>
-                                            </Button>
-                                        </StackPanel>
-                                    </Border>
-                                </DockPanel>
-
-                                <TextBox Grid.Row="1" x:Name="PART_AssetFilter" BorderThickness="1" Margin="1" VerticalContentAlignment="Center"/>
-
-                                <TreeView x:Name="PART_AssetTreeView" Grid.Row="2" Margin="0,0,0,3" >
-                                    <TreeView.Resources>
-                                        <conv:TreeViewListSortConverter x:Key="treeViewListSortConverter"/>
-                                    </TreeView.Resources>
-                                    <TreeView.ItemContainerStyle>
-                                        <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource baseTreeViewItemStyle}">
-                                            <Setter Property="IsExpanded" Value="{Binding Path=IsExpanded, Mode=TwoWay}"/>
-                                            <Setter Property="IsSelected" Value="{Binding Path=IsSelected, Mode=TwoWay}"/>
-                                        </Style>
-                                    </TreeView.ItemContainerStyle>
-                                    <TreeView.ItemTemplate>
-                                        <HierarchicalDataTemplate ItemsSource="{Binding Path=Children, Converter={StaticResource treeViewListSortConverter}, ConverterParameter=PathName}">
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Height="22">
-                                                <Rectangle x:Name="imageRect"  Grid.Column="0" Width="16" Height="16" Fill="{StaticResource FontColor}" Margin="3,0,0,0">
-                                                    <Rectangle.OpacityMask>
-                                                        <ImageBrush ImageSource="/FrostyEditor;component/Images/CloseFolder.png"/>
-                                                    </Rectangle.OpacityMask>
-                                                </Rectangle>
-                                                <TextBlock Text="{Binding Path=DisplayName}" Foreground="{StaticResource FontColor}" FontFamily="MS Reference Sans Serif" VerticalAlignment="Center" Margin="8,0,3,0"/>
                                             </StackPanel>
-                                            <HierarchicalDataTemplate.Triggers>
-                                                <DataTrigger Binding="{Binding Path=IsExpanded}" Value="True">
-                                                    <Setter Property="OpacityMask" TargetName="imageRect">
-                                                        <Setter.Value>
-                                                            <ImageBrush ImageSource="/FrostyEditor;component/Images/OpenFolder.png"/>
-                                                        </Setter.Value>
-                                                    </Setter>
-                                                </DataTrigger>
-                                                <DataTrigger Binding="{Binding Path=IsRoot}" Value="True">
-                                                    <Setter Property="OpacityMask" TargetName="imageRect">
-                                                        <Setter.Value>
-                                                            <ImageBrush ImageSource="/FrostyEditor;component/Images/Database.png"/>
-                                                        </Setter.Value>
-                                                    </Setter>
-                                                </DataTrigger>
-                                            </HierarchicalDataTemplate.Triggers>
-                                        </HierarchicalDataTemplate>
-                                    </TreeView.ItemTemplate>
-                                </TreeView>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </DockPanel>
 
+                            <Grid Grid.Row="1" Grid.Column="0" Background="{StaticResource WindowBackground}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+
+                                <core:FrostyDataExplorer x:Name="PART_SelectedDataExplorer" Grid.Row="0"/>
                             </Grid>
 
                             <GridSplitter Background="Transparent" VerticalAlignment="Stretch" Width="3" ResizeDirection="Columns"/>
 
-                            <Grid Grid.Column="1" Background="{StaticResource WindowBackground}">
+                            <Grid  Grid.Row="1" Grid.Column="1" Background="{StaticResource WindowBackground}">
                                 <Grid.RowDefinitions>
                                     <RowDefinition/>
                                 </Grid.RowDefinitions>
