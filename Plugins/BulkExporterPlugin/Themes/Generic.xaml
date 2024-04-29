@@ -32,16 +32,16 @@
                             </Grid.RowDefinitions>
 
                             <DockPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" LastChildFill="True" Background="{StaticResource ControlBackground}">
-                                <CheckBox x:Name="PART_Texture" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
+                                <CheckBox x:Name="PART_Texture" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="True"/>
                                 <Label Content="Texture" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
 
-                                <CheckBox x:Name="PART_Mesh" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
+                                <CheckBox x:Name="PART_Mesh" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="True"/>
                                 <Label Content="Mesh" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
 
-                                <CheckBox x:Name="PART_SkinnedMesh" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
+                                <CheckBox x:Name="PART_SkinnedMesh" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="True"/>
                                 <Label Content="Skinned Mesh" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
 
-                                <CheckBox x:Name="PART_Audio" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center"/>
+                                <CheckBox x:Name="PART_Audio" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="True"/>
                                 <Label Content="Audio" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
 
                                 <Border Background="{StaticResource ControlBackground}"

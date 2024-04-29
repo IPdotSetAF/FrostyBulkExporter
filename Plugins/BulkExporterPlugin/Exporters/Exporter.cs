@@ -23,7 +23,44 @@ namespace BulkExporterPlugin.Exporters
         public static string[] TextureAssetTypes = { "TextureAsset" };
         public static string[] AudioAssetTypes = AudioExporter.assetTypes;
 
-        private static IEnumerable<EbxAssetEntry> EnumerateAssets(string[] paths, string[] excludePaths, params string[] types)
+        public static AssetCollection EnumerateAllAssets(string[] paths, string[] excludePaths)
+        {
+            for (int i = 0; i < paths.Length; i++)
+                paths[i] = paths[i].Trim('/');
+
+            for (int i = 0; i < excludePaths.Length; i++)
+                excludePaths[i] = excludePaths[i].Trim('/');
+
+            IEnumerable<EbxAssetEntry> meshes = new List<EbxAssetEntry>();
+            IEnumerable<EbxAssetEntry> skinnedMeshes = new List<EbxAssetEntry>();
+            IEnumerable<EbxAssetEntry> textures = new List<EbxAssetEntry>();
+            IEnumerable<EbxAssetEntry> audios = new List<EbxAssetEntry>();
+
+            FrostyTaskWindow.Show("Enumerating Assets", "Initializing...", (task) =>
+            {
+                task.Update("Enumerating Meshes...", 0);
+                meshes = EnumerateAssets(paths, excludePaths, MeshAssetTypes);
+                task.Update("Enumerating Skinned Meshes...", 25);
+                skinnedMeshes = EnumerateAssets(paths, excludePaths, SkinnedMeshAssetTypes);
+                task.Update("Enumerating Textures...", 50);
+                textures = EnumerateAssets(paths, excludePaths, TextureAssetTypes);
+                task.Update("Enumerating Audios...", 75);
+                audios = EnumerateAssets(paths, excludePaths, AudioAssetTypes);
+                task.Update("Done", 100);
+            });
+
+            return new AssetCollection
+            {
+                Meshes = meshes,
+                SkinnedMeshes = skinnedMeshes,
+                Textures = textures,
+                Audios = audios,
+            };
+        }
+
+        public static AssetCollection EnumerateAllAssets(string path) => EnumerateAllAssets(new[] { path }, Array.Empty<string>());
+
+        public static IEnumerable<EbxAssetEntry> EnumerateAssets(string[] paths, string[] excludePaths, params string[] types)
         {
             List<EbxAssetEntry> items = new List<EbxAssetEntry>();
 
@@ -47,23 +84,6 @@ namespace BulkExporterPlugin.Exporters
                 }
 
             return items;
-        }
-
-        public static AssetCollection EnumerateAllAssets(string[] paths, string[] excludePaths)
-        {
-            for (int i = 0; i < paths.Length; i++)
-                paths[i] = paths[i].Trim('/');
-
-            for (int i = 0; i < excludePaths.Length; i++)
-                excludePaths[i] = excludePaths[i].Trim('/');
-
-            return new AssetCollection
-            {
-                Meshes = EnumerateAssets(paths, excludePaths, MeshAssetTypes),
-                SkinnedMeshes = EnumerateAssets(paths, excludePaths, SkinnedMeshAssetTypes),
-                Textures = EnumerateAssets(paths, excludePaths, TextureAssetTypes),
-                Audios = EnumerateAssets(paths, excludePaths, AudioAssetTypes),
-            };
         }
 
         public static void ExportAssets(this AssetCollection assetCollection, string path, BulkExportSetting settings)
