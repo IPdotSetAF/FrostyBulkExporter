@@ -19,6 +19,7 @@ using BulkExporterPlugin.Models;
 using BulkExporterPlugin.Windows;
 using Microsoft.Win32;
 using System.Threading.Tasks;
+using System.Collections;
 
 namespace BulkExporterPlugin.Editors
 {
@@ -86,9 +87,6 @@ namespace BulkExporterPlugin.Editors
             textureCheck = GetTemplateChild(PART_Texture) as CheckBox;
             exportButton = GetTemplateChild(PART_ExportButton) as Button;
 
-            //includedPathsListBox.ItemsSource = _included_paths;
-            //excludedPathsListBox.ItemsSource = _excluded_paths;
-
             meshCheck.Click += filterChecks_Checked;
             skinnedMeshCheck.Click += filterChecks_Checked;
             textureCheck.Click += filterChecks_Checked;
@@ -134,7 +132,7 @@ namespace BulkExporterPlugin.Editors
                 return;
 
             dataExplorer.ItemsSource = loadAllAssets();
-            selectedDataExplorer.ItemsSource = LoadSelectedAssets();
+            selectedDataExplorer.ItemsSource = Array.Empty<EbxAssetEntry>();
         }
 
         private RelayCommand ExcludeClick => new RelayCommand((o) =>
@@ -143,9 +141,10 @@ namespace BulkExporterPlugin.Editors
 
             if (_excluded_paths.Contains(path))
                 return;
-            _included_paths.Remove(path);
+            _included_paths.RemoveAll(p => p.StartsWith(path));
             _excluded_paths.Add(path);
 
+            UpdatePathLists();
             selectedDataExplorer.ItemsSource = LoadSelectedAssets();
         });
 
@@ -159,6 +158,7 @@ namespace BulkExporterPlugin.Editors
             _included_paths.Remove(path);
             _excluded_paths.Add(path);
 
+            UpdatePathLists();
             selectedDataExplorer.ItemsSource = LoadSelectedAssets();
         });
 
@@ -171,19 +171,21 @@ namespace BulkExporterPlugin.Editors
             _excluded_paths.Remove(path);
             _included_paths.Add(path);
 
+            UpdatePathLists();
             selectedDataExplorer.ItemsSource = LoadSelectedAssets();
         });
 
         private RelayCommand IncludeAssetClick => new RelayCommand((o) =>
         {
             var asset = dataExplorer.SelectedAsset as EbxAssetEntry;
-            string path = asset.Path;
+            string path = asset.Name;
 
             if (_included_paths.Contains(path))
                 return;
             _excluded_paths.Remove(path);
             _included_paths.Add(path);
 
+            UpdatePathLists();
             selectedDataExplorer.ItemsSource = LoadSelectedAssets();
         });
 
@@ -273,6 +275,17 @@ namespace BulkExporterPlugin.Editors
                 assets = assets.Concat(collection.Audios);
 
             return assets;
+        }
+
+        private void UpdatePathLists()
+        {
+            includedPathsListBox.Items.Clear();
+            foreach (var path in _included_paths)
+                includedPathsListBox.Items.Add(path);
+
+            excludedPathsListBox.Items.Clear();
+            foreach (var path in _excluded_paths)
+                excludedPathsListBox.Items.Add(path);
         }
     }
 }
