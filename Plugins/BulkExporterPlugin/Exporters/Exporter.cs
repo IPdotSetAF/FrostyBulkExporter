@@ -66,8 +66,8 @@ namespace BulkExporterPlugin.Exporters
             foreach (var type in types)
                 foreach (EbxAssetEntry entry in App.AssetManager.EnumerateEbx(type: type))
                 {
-                    var includes = paths.Where(path => entry.Path.StartsWith(path, StringComparison.OrdinalIgnoreCase)).ToArray();
-                    var excludes = excludePaths.Where(path => entry.Path.StartsWith(path, StringComparison.OrdinalIgnoreCase)).ToArray();
+                    var includes = paths.Where(path => entry.Name.StartsWith(path, StringComparison.OrdinalIgnoreCase)).ToArray();
+                    var excludes = excludePaths.Where(path => entry.Name.StartsWith(path, StringComparison.OrdinalIgnoreCase)).ToArray();
 
                     if (excludes.Length > 0)
                     {

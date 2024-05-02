@@ -46,8 +46,7 @@ namespace BulkExporterPlugin.Editors
         private const string PART_Audio = "PART_Audio";
         private const string PART_ExportButton = "PART_ExportButton";
 
-        private AssetCollection _assetCollection;
-        private AssetCount _assetCount;
+
         private List<string> _included_paths = new List<string>();
         private List<string> _excluded_paths = new List<string>();
 
@@ -139,10 +138,9 @@ namespace BulkExporterPlugin.Editors
         {
             var path = selectedDataExplorer.SelectedPath;
 
-            if (_excluded_paths.Contains(path))
-                return;
-            _included_paths.RemoveAll(p => p.StartsWith(path));
-            _excluded_paths.Add(path);
+            _included_paths.RemoveAll(p => p.StartsWith(path, StringComparison.OrdinalIgnoreCase));
+            if (!_excluded_paths.Contains(path))
+                _excluded_paths.Add(path);
 
             UpdatePathLists();
             selectedDataExplorer.ItemsSource = LoadSelectedAssets();
@@ -151,7 +149,7 @@ namespace BulkExporterPlugin.Editors
         private RelayCommand ExcludeAssetClick => new RelayCommand((o) =>
         {
             var asset = selectedDataExplorer.SelectedAsset as EbxAssetEntry;
-            string path = asset.Path;
+            string path = asset.Name;
 
             if (_excluded_paths.Contains(path))
                 return;
@@ -166,10 +164,9 @@ namespace BulkExporterPlugin.Editors
         {
             var path = dataExplorer.SelectedPath;
 
-            if (_included_paths.Contains(path))
-                return;
-            _excluded_paths.Remove(path);
-            _included_paths.Add(path);
+            _excluded_paths.RemoveAll(p => p.StartsWith(path, StringComparison.OrdinalIgnoreCase));
+            if (!_included_paths.Contains(path))
+                _included_paths.Add(path);
 
             UpdatePathLists();
             selectedDataExplorer.ItemsSource = LoadSelectedAssets();
