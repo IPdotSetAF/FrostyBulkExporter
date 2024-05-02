@@ -1,43 +1,14 @@
-# FrostyBulkExporter
+# FrostyToolsuite
+The most advanced modding platform for games running on DICE's Frostbite game engine.
 
-This is a plugin for FrostyEditor which enables bulk exporting of Game assets from Frostbite Engine Games.
+## Setup
 
-This plugin currently supports exporting of the following assets:
-- Mesh assets
-   - FBX
-   - OBJ
-- Skinned Mesh assets
-   - FBX
-   - OBJ
-- Texture assets
-   - PNG
-   - HDR
-   - TGA
-   - DDS
-- Audio assets
-   - WAV
+1. Download Git https://git-scm.com/download/win.
+2. Create an empty folder, go inside it, right click an empty space and hit "Git Bash Here". That should open up a command prompt.
+3. Press the green "Code" button in the repository and copy the text under "HTTPS".
+4. Type out ``git clone -b 1.0.6 <HTTPS code>`` in the command prompt and hit enter. This should clone the project files into the folder.
+5. Open the solution (found under FrostyEditor) with Visual Studio 2019, and make sure the project is set to ``DeveloperDebug`` and ``x64``. Close out of retarget window if prompted.
+6. Only build the projects themselves, never the solution.
 
-** Mesh export settings includes all settings that are currently available in `MeshSetPlugin`. **
-
-## How to:
-
-There are two ways to bulk export assets:
-
-1. Right clicking on the desired folder in the `DataExplorer` tab on the left side of the `FrostyEditor` and choosing `Bulk Export` option.
-
-2. Opening the `Bulk Exporter` window from the `View` Menu.
-   
-   2.1. Right clicking the folders or assets from the right panel, and including them to the selection.
-
-   2.2. Clicking the export button on top of the window.
-
-   - You can also right click on the folders and assets on the left selected assets explorer tab and exclude the items from selection.
-   - There are asset filtering options on the top of the window that you can use. 
-
-- After these steps the export folder selection window will appear, choose where you want to export the assets.
-
-- Then, the export settings window will appear that lets you choose the asset types to export and the formats and other settings for each asset type.
-
-- Enjoy.
-## TODO:
-- SVG asset support
+## License
+The Content, Name, Code, and all assets are licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
