@@ -1,25 +1,18 @@
 ﻿using FrostySdk.Interfaces;
-using FrostySdk.IO;
 using FrostySdk.Managers;
 using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using Frosty.Core.Controls;
-using Frosty.Core.Windows;
 using Frosty.Core;
 using System.Windows.Media;
-using FrostySdk;
-using System.ComponentModel;
 using System.Linq;
 using System.Collections.Generic;
 using BulkExporterPlugin.Exporters;
 using BulkExporterPlugin.Models;
 using BulkExporterPlugin.Windows;
 using Microsoft.Win32;
-using System.Threading.Tasks;
-using System.Collections;
 
 namespace BulkExporterPlugin.Editors
 {
@@ -42,18 +35,21 @@ namespace BulkExporterPlugin.Editors
         private const string PART_Audio = "PART_Audio";
         private const string PART_ExportButton = "PART_ExportButton";
 
-
         private List<string> _included_paths = new List<string>();
         private List<string> _excluded_paths = new List<string>();
 
-        private FrostyDataExplorer selectedDataExplorer;
-        private FrostyDataExplorer dataExplorer;
-        private CheckBox meshCheck;
-        private CheckBox textureCheck;
-        private CheckBox audioCheck;
-        private CheckBox skinnedMeshCheck;
-        private Button exportButton;
-        private ILogger logger;
+        private string[] _assetTypefilter;
+        private IEnumerable<EbxAssetEntry> _allAssets = Array.Empty<EbxAssetEntry>();
+        private IEnumerable<EbxAssetEntry> _selectedAssets = Array.Empty<EbxAssetEntry>();
+
+        private FrostyDataExplorer _selectedDataExplorer;
+        private FrostyDataExplorer _allDataExplorer;
+        private CheckBox _meshCheck;
+        private CheckBox _textureCheck;
+        private CheckBox _audioCheck;
+        private CheckBox _skinnedMeshCheck;
+        private Button _exportButton;
+        private ILogger _logger;
 
         static BulkExporter()
         {
@@ -62,52 +58,52 @@ namespace BulkExporterPlugin.Editors
 
         public BulkExporter(ILogger logger = null)
         {
-            this.logger = logger;
+            this._logger = logger;
         }
 
         public override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
 
-            selectedDataExplorer = GetTemplateChild(PART_SelectedDataExplorer) as FrostyDataExplorer;
-            dataExplorer = GetTemplateChild(PART_DataExplorer) as FrostyDataExplorer;
-            meshCheck = GetTemplateChild(PART_Mesh) as CheckBox;
-            textureCheck = GetTemplateChild(PART_Texture) as CheckBox;
-            skinnedMeshCheck = GetTemplateChild(PART_SkinnedMesh) as CheckBox;
-            audioCheck = GetTemplateChild(PART_Audio) as CheckBox;
-            textureCheck = GetTemplateChild(PART_Texture) as CheckBox;
-            exportButton = GetTemplateChild(PART_ExportButton) as Button;
+            _selectedDataExplorer = GetTemplateChild(PART_SelectedDataExplorer) as FrostyDataExplorer;
+            _allDataExplorer = GetTemplateChild(PART_DataExplorer) as FrostyDataExplorer;
+            _meshCheck = GetTemplateChild(PART_Mesh) as CheckBox;
+            _textureCheck = GetTemplateChild(PART_Texture) as CheckBox;
+            _skinnedMeshCheck = GetTemplateChild(PART_SkinnedMesh) as CheckBox;
+            _audioCheck = GetTemplateChild(PART_Audio) as CheckBox;
+            _textureCheck = GetTemplateChild(PART_Texture) as CheckBox;
+            _exportButton = GetTemplateChild(PART_ExportButton) as Button;
 
-            meshCheck.Click += filterChecks_Checked;
-            skinnedMeshCheck.Click += filterChecks_Checked;
-            textureCheck.Click += filterChecks_Checked;
-            audioCheck.Click += filterChecks_Checked;
-            exportButton.Click += ExportButton_Click;
+            _meshCheck.Click += filterChecks_Checked;
+            _skinnedMeshCheck.Click += filterChecks_Checked;
+            _textureCheck.Click += filterChecks_Checked;
+            _audioCheck.Click += filterChecks_Checked;
+            _exportButton.Click += ExportButton_Click;
 
-            selectedDataExplorer.ExplorerContextMenu = new ContextMenu();
-            selectedDataExplorer.ExplorerContextMenu.Items.Add(new MenuItem
+            _selectedDataExplorer.ExplorerContextMenu = new ContextMenu();
+            _selectedDataExplorer.ExplorerContextMenu.Items.Add(new MenuItem
             {
                 Icon = GetImage("ExcludeRecursive.png"),
                 Header = "Exclude",
                 Command = ExcludeClick
             });
-            selectedDataExplorer.AssetContextMenu = new ContextMenu();
-            selectedDataExplorer.AssetContextMenu.Items.Add(new MenuItem
+            _selectedDataExplorer.AssetContextMenu = new ContextMenu();
+            _selectedDataExplorer.AssetContextMenu.Items.Add(new MenuItem
             {
                 Icon = GetImage("Exclude.png"),
                 Header = "Exclude",
                 Command = ExcludeAssetClick
             });
 
-            dataExplorer.ExplorerContextMenu = new ContextMenu();
-            dataExplorer.ExplorerContextMenu.Items.Add(new MenuItem
+            _allDataExplorer.ExplorerContextMenu = new ContextMenu();
+            _allDataExplorer.ExplorerContextMenu.Items.Add(new MenuItem
             {
                 Icon = GetImage("IncludeRecursive.png"),
                 Header = "Include",
                 Command = IncludeClick
             });
-            dataExplorer.AssetContextMenu = new ContextMenu();
-            dataExplorer.AssetContextMenu.Items.Add(new MenuItem
+            _allDataExplorer.AssetContextMenu = new ContextMenu();
+            _allDataExplorer.AssetContextMenu.Items.Add(new MenuItem
             {
                 Icon = GetImage("Include.png"),
                 Header = "Include",
@@ -119,27 +115,29 @@ namespace BulkExporterPlugin.Editors
 
         private void BulkExporter_Loaded(object sender, RoutedEventArgs e)
         {
-            if (dataExplorer.ItemsSource != null)
+            if (_allDataExplorer.ItemsSource != null)
                 return;
 
-            dataExplorer.ItemsSource = loadAllAssets();
-            selectedDataExplorer.ItemsSource = Array.Empty<EbxAssetEntry>();
+            FilterUpdated();
+
+            ReloadAllAssets();
+            _selectedDataExplorer.ItemsSource = _selectedAssets;
         }
 
         private RelayCommand ExcludeClick => new RelayCommand((o) =>
         {
-            var path = selectedDataExplorer.SelectedPath;
+            var path = _selectedDataExplorer.SelectedPath;
 
             _included_paths.RemoveAll(p => p.StartsWith(path, StringComparison.OrdinalIgnoreCase));
             if (!_excluded_paths.Contains(path))
                 _excluded_paths.Add(path);
 
-            selectedDataExplorer.ItemsSource = LoadSelectedAssets();
+            ReloadSelectedAssets();
         });
 
         private RelayCommand ExcludeAssetClick => new RelayCommand((o) =>
         {
-            var asset = selectedDataExplorer.SelectedAsset as EbxAssetEntry;
+            var asset = _selectedDataExplorer.SelectedAsset as EbxAssetEntry;
             string path = asset.Name;
 
             if (_excluded_paths.Contains(path))
@@ -147,23 +145,23 @@ namespace BulkExporterPlugin.Editors
             _included_paths.Remove(path);
             _excluded_paths.Add(path);
 
-            selectedDataExplorer.ItemsSource = LoadSelectedAssets();
+            ReloadSelectedAssets();
         });
 
         private RelayCommand IncludeClick => new RelayCommand((o) =>
         {
-            var path = dataExplorer.SelectedPath;
+            var path = _allDataExplorer.SelectedPath;
 
             _excluded_paths.RemoveAll(p => p.StartsWith(path, StringComparison.OrdinalIgnoreCase));
             if (!_included_paths.Contains(path))
                 _included_paths.Add(path);
 
-            selectedDataExplorer.ItemsSource = LoadSelectedAssets();
+            ReloadSelectedAssets();
         });
 
         private RelayCommand IncludeAssetClick => new RelayCommand((o) =>
         {
-            var asset = dataExplorer.SelectedAsset as EbxAssetEntry;
+            var asset = _allDataExplorer.SelectedAsset as EbxAssetEntry;
             string path = asset.Name;
 
             if (_included_paths.Contains(path))
@@ -171,14 +169,10 @@ namespace BulkExporterPlugin.Editors
             _excluded_paths.Remove(path);
             _included_paths.Add(path);
 
-            selectedDataExplorer.ItemsSource = LoadSelectedAssets();
+            ReloadSelectedAssets();
         });
 
-        private void filterChecks_Checked(object sender, RoutedEventArgs e)
-        {
-            dataExplorer.ItemsSource = loadAllAssets();
-            selectedDataExplorer.ItemsSource = LoadSelectedAssets();
-        }
+        private void filterChecks_Checked(object sender, RoutedEventArgs e) => FilterUpdated();
 
         public void ExportButton_Click(object sender, RoutedEventArgs e)
         {
@@ -186,10 +180,10 @@ namespace BulkExporterPlugin.Editors
             AssetCount assetCounts = assets.GetCounts();
 
             BulkExportWindow win = new BulkExportWindow(assetCounts);
-            win.ExportSetting.ExportMeshes = meshCheck.IsChecked == true;
-            win.ExportSetting.ExportSkinnedMeshes = skinnedMeshCheck.IsChecked == true;
-            win.ExportSetting.ExportTextures = textureCheck.IsChecked == true;
-            win.ExportSetting.ExportAudio = audioCheck.IsChecked == true;
+            win.ExportSetting.ExportMeshes = _meshCheck.IsChecked == true;
+            win.ExportSetting.ExportSkinnedMeshes = _skinnedMeshCheck.IsChecked == true;
+            win.ExportSetting.ExportTextures = _textureCheck.IsChecked == true;
+            win.ExportSetting.ExportAudio = _audioCheck.IsChecked == true;
             if (win.ShowDialog() == false)
                 return;
 
@@ -220,46 +214,55 @@ namespace BulkExporterPlugin.Editors
             App.EditorWindow.DataExplorer.RefreshAll();
         }
 
-        private Image GetImage(string name)
+        private Image GetImage(string name) => new Image()
         {
-            return new Image()
-            {
-                Source = new ImageSourceConverter().ConvertFromString($"pack://application:,,,/BulkExporterPlugin;component/Images/{name}") as ImageSource
-            };
-        }
+            Source = new ImageSourceConverter().ConvertFromString($"pack://application:,,,/BulkExporterPlugin;component/Images/{name}") as ImageSource
+        };
 
-        private IEnumerable<EbxAssetEntry> loadAllAssets()
+        private void ReloadAllAssets()
         {
             var collection = Exporter.EnumerateAllAssets("/");
-            IEnumerable<EbxAssetEntry> assets = new List<EbxAssetEntry>();
 
-            if (meshCheck.IsChecked == true)
-                assets = assets.Concat(collection.Meshes);
-            if (skinnedMeshCheck.IsChecked == true)
-                assets = assets.Concat(collection.SkinnedMeshes);
-            if (textureCheck.IsChecked == true)
-                assets = assets.Concat(collection.Textures);
-            if (audioCheck.IsChecked == true)
-                assets = assets.Concat(collection.Audios);
+            _allAssets = collection.Meshes
+                .Concat(collection.SkinnedMeshes)
+                .Concat(collection.Textures)
+                .Concat(collection.Audios);
 
-            return assets;
+            _allDataExplorer.ItemsSource = FilterAssets(_allAssets, _assetTypefilter);
         }
 
-        private IEnumerable<EbxAssetEntry> LoadSelectedAssets()
+        private void ReloadSelectedAssets()
         {
             var collection = Exporter.EnumerateAllAssets(_included_paths.ToArray(), _excluded_paths.ToArray());
-            IEnumerable<EbxAssetEntry> assets = new List<EbxAssetEntry>();
 
-            if (meshCheck.IsChecked == true)
-                assets = assets.Concat(collection.Meshes);
-            if (skinnedMeshCheck.IsChecked == true)
-                assets = assets.Concat(collection.SkinnedMeshes);
-            if (textureCheck.IsChecked == true)
-                assets = assets.Concat(collection.Textures);
-            if (audioCheck.IsChecked == true)
-                assets = assets.Concat(collection.Audios);
+            _selectedAssets = collection.Meshes
+                .Concat(collection.SkinnedMeshes)
+                .Concat(collection.Textures)
+                .Concat(collection.Audios);
 
-            return assets;
+            _selectedDataExplorer.ItemsSource = FilterAssets(_selectedAssets, _assetTypefilter);
         }
+
+        private void FilterUpdated()
+        {
+            IEnumerable<string> types = Array.Empty<string>();
+
+            if (_meshCheck.IsChecked == true)
+                types = types.Concat(Exporter.MeshAssetTypes);
+            if (_skinnedMeshCheck.IsChecked == true)
+                types = types.Concat(Exporter.SkinnedMeshAssetTypes);
+            if (_textureCheck.IsChecked == true)
+                types = types.Concat(Exporter.TextureAssetTypes);
+            if (_audioCheck.IsChecked == true)
+                types = types.Concat(Exporter.AudioAssetTypes);
+
+            _assetTypefilter = types.ToArray();
+
+            _allDataExplorer.ItemsSource = FilterAssets(_allAssets, _assetTypefilter);
+            _selectedDataExplorer.ItemsSource = FilterAssets(_selectedAssets, _assetTypefilter);
+        }
+
+        private IEnumerable<EbxAssetEntry> FilterAssets(IEnumerable<EbxAssetEntry> assets, string[] assetTypes) =>
+            assets.Where(asset => assetTypes.Contains(asset.Type));
     }
 }
