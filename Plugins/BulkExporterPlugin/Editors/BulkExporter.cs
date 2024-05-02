@@ -23,8 +23,6 @@ using System.Collections;
 
 namespace BulkExporterPlugin.Editors
 {
-    [TemplatePart(Name = PART_IncludedPathsList, Type = typeof(ListBox))]
-    [TemplatePart(Name = PART_ExcludedPathsList, Type = typeof(ListBox))]
     [TemplatePart(Name = PART_SelectedDataExplorer, Type = typeof(FrostyDataExplorer))]
     [TemplatePart(Name = PART_DataExplorer, Type = typeof(FrostyDataExplorer))]
     [TemplatePart(Name = PART_Mesh, Type = typeof(CheckBox))]
@@ -36,8 +34,6 @@ namespace BulkExporterPlugin.Editors
     {
         public override ImageSource Icon => BulkExporterMenuExtension.imageSource;
 
-        private const string PART_IncludedPathsList = "PART_IncludedPathsList";
-        private const string PART_ExcludedPathsList = "PART_ExcludedPathsList";
         private const string PART_SelectedDataExplorer = "PART_SelectedDataExplorer";
         private const string PART_DataExplorer = "PART_DataExplorer";
         private const string PART_Texture = "PART_Texture";
@@ -50,8 +46,6 @@ namespace BulkExporterPlugin.Editors
         private List<string> _included_paths = new List<string>();
         private List<string> _excluded_paths = new List<string>();
 
-        private ListBox includedPathsListBox;
-        private ListBox excludedPathsListBox;
         private FrostyDataExplorer selectedDataExplorer;
         private FrostyDataExplorer dataExplorer;
         private CheckBox meshCheck;
@@ -75,8 +69,6 @@ namespace BulkExporterPlugin.Editors
         {
             base.OnApplyTemplate();
 
-            includedPathsListBox = GetTemplateChild(PART_IncludedPathsList) as ListBox;
-            excludedPathsListBox = GetTemplateChild(PART_ExcludedPathsList) as ListBox;
             selectedDataExplorer = GetTemplateChild(PART_SelectedDataExplorer) as FrostyDataExplorer;
             dataExplorer = GetTemplateChild(PART_DataExplorer) as FrostyDataExplorer;
             meshCheck = GetTemplateChild(PART_Mesh) as CheckBox;
@@ -142,7 +134,6 @@ namespace BulkExporterPlugin.Editors
             if (!_excluded_paths.Contains(path))
                 _excluded_paths.Add(path);
 
-            UpdatePathLists();
             selectedDataExplorer.ItemsSource = LoadSelectedAssets();
         });
 
@@ -156,7 +147,6 @@ namespace BulkExporterPlugin.Editors
             _included_paths.Remove(path);
             _excluded_paths.Add(path);
 
-            UpdatePathLists();
             selectedDataExplorer.ItemsSource = LoadSelectedAssets();
         });
 
@@ -168,7 +158,6 @@ namespace BulkExporterPlugin.Editors
             if (!_included_paths.Contains(path))
                 _included_paths.Add(path);
 
-            UpdatePathLists();
             selectedDataExplorer.ItemsSource = LoadSelectedAssets();
         });
 
@@ -182,7 +171,6 @@ namespace BulkExporterPlugin.Editors
             _excluded_paths.Remove(path);
             _included_paths.Add(path);
 
-            UpdatePathLists();
             selectedDataExplorer.ItemsSource = LoadSelectedAssets();
         });
 
@@ -272,17 +260,6 @@ namespace BulkExporterPlugin.Editors
                 assets = assets.Concat(collection.Audios);
 
             return assets;
-        }
-
-        private void UpdatePathLists()
-        {
-            includedPathsListBox.Items.Clear();
-            foreach (var path in _included_paths)
-                includedPathsListBox.Items.Add(path);
-
-            excludedPathsListBox.Items.Clear();
-            foreach (var path in _excluded_paths)
-                excludedPathsListBox.Items.Add(path);
         }
     }
 }

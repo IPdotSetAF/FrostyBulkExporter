@@ -27,20 +27,11 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="1*"/>
                                 <RowDefinition Height="26"/>
-                                <RowDefinition Height="3*"/>
+                                <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
-                            <ListBox Grid.Row="0" Grid.Column="0" x:Name="PART_IncludedPathsList" BorderThickness="2" 
-                                     BorderBrush="{StaticResource ControlBackground}">
-                            </ListBox>
-
-                            <ListBox Grid.Row="0" Grid.Column="1" x:Name="PART_ExcludedPathsList" BorderThickness="2" 
-                                     BorderBrush="{StaticResource ControlBackground}">
-                            </ListBox>
-
-                            <DockPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" LastChildFill="True" Background="{StaticResource ControlBackground}">
+                            <DockPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" LastChildFill="True" Background="{StaticResource ControlBackground}">
                                 <CheckBox x:Name="PART_Texture" Margin="0, 2, 0, 0" BorderThickness="1" VerticalContentAlignment="Center" IsChecked="True"/>
                                 <Label Content="Texture" Margin="0, 2, 0, 0" FontFamily="Global User Interface"/>
 
@@ -77,11 +68,11 @@
                                 </Border>
                             </DockPanel>
 
-                            <core:FrostyDataExplorer x:Name="PART_SelectedDataExplorer" Grid.Row="2" Grid.Column="0"/>
+                            <core:FrostyDataExplorer x:Name="PART_SelectedDataExplorer" Grid.Row="1" Grid.Column="0"/>
                             
-                            <GridSplitter Background="Transparent" Grid.RowSpan="3" VerticalAlignment="Stretch" Width="3" ResizeDirection="Columns"/>
+                            <GridSplitter Background="Transparent" Grid.RowSpan="2" VerticalAlignment="Stretch" Width="3" ResizeDirection="Columns"/>
 
-                            <core:FrostyDataExplorer x:Name="PART_DataExplorer"  Grid.Row="2" Grid.Column="1" />
+                            <core:FrostyDataExplorer x:Name="PART_DataExplorer"  Grid.Row="1" Grid.Column="1" />
 
                         </Grid>
                     </Grid>
