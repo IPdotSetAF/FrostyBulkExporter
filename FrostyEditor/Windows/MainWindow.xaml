@@ -1078,7 +1078,6 @@
                                         BorderThickness="0,2,0,0">
                                     <core:FrostyDataExplorer x:Name="dataExplorer"
                                                              SelectedAssetDoubleClick="dataExplorer_SelectedAssetDoubleClick"
-                                                             PathSelectionChanged="dataExplorer_PathSelectionChanged"
                                                              SelectionChanged="dataExplorer_SelectionChanged"
                                                              BookmarkContext="Asset Bookmarks">
                                         <core:FrostyDataExplorer.AssetContextMenu>

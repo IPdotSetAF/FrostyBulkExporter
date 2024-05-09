@@ -911,12 +911,6 @@ namespace FrostyEditor
             App.SelectedAsset = entry;
         }
 
-        private void dataExplorer_PathSelectionChanged(object sender, RoutedEventArgs e)
-        {
-            string path = dataExplorer.SelectedPath as string;
-            App.SelectedPath = path;
-        }
-
         #region -- Context Menu Callbacks --
 
         // context menu callbacks
