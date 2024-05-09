@@ -17,7 +17,7 @@ namespace BulkExporterPlugin
 
         public override RelayCommand ContextItemClicked => new RelayCommand((o) =>
         {
-            string selectedPath = App.SelectedPath;
+            string selectedPath = App.EditorWindow.DataExplorer.SelectedPath;
 
             AssetCollection assets = Exporter.EnumerateAllAssets(selectedPath);
             AssetCount assetCounts = assets.GetCounts();
