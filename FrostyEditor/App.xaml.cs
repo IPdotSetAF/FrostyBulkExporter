@@ -25,8 +25,6 @@ namespace FrostyEditor
         public static FileSystem FileSystem { get => Frosty.Core.App.FileSystem; set => Frosty.Core.App.FileSystem = value; }
         public static PluginManager PluginManager { get => Frosty.Core.App.PluginManager; set => Frosty.Core.App.PluginManager = value; }
         public static EbxAssetEntry SelectedAsset { get => Frosty.Core.App.SelectedAsset; set => Frosty.Core.App.SelectedAsset = value; }
-        public static string SelectedPath { get => Frosty.Core.App.SelectedPath; set => Frosty.Core.App.SelectedPath = value; }
-
         public static ILogger Logger { get => Frosty.Core.App.Logger; set => Frosty.Core.App.Logger = value; }
         public static HashSet<int> WhitelistedBundles { get => Frosty.Core.App.WhitelistedBundles; set => Frosty.Core.App.WhitelistedBundles = value; }
 
