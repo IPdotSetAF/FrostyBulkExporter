@@ -123,7 +123,14 @@ namespace BulkExporterPlugin.Exporters
                         filePath += '.' + format;
                         EnsureDirectoryExists(filePath);
 
-                        exporter.ExportFBX(meshAsset, filePath, settings.MeshVersion.ToString().Replace("FBX_", ""), settings.MeshScale.ToString(), settings.FlattenMesh, settings.SingleLOD, string.Empty, format, meshSet);
+                        try
+                        {
+                            exporter.ExportFBX(meshAsset, filePath, settings.MeshVersion.ToString().Replace("FBX_", ""), settings.MeshScale.ToString(), settings.FlattenMesh, settings.SingleLOD, string.Empty, format, meshSet);
+                        }
+                        catch (Exception)
+                        {
+                            App.Logger.Log("[Skipping] Failed to export meshAsset: {0}", asset.Name);
+                        }
 
                         task.Update(asset.Name, (progress / (double)total) * 100.0);
                         progress++;
@@ -158,7 +165,11 @@ namespace BulkExporterPlugin.Exporters
                         }
                         catch (IndexOutOfRangeException)
                         {
-                            App.Logger.LogError("[Skipping] Skeleton miss match for skinnedMeshAsset : {1}", asset.Name);
+                            App.Logger.LogError("[Skipping] Skeleton miss match for skinnedMeshAsset : {0}", asset.Name);
+                        }
+                        catch (Exception)
+                        {
+                            App.Logger.Log("[Skipping] Failed to export skinnedMeshAsset: {0}", asset.Name);
                         }
 
                         task.Update(asset.Name, (progress / (double)total) * 100.0);
@@ -183,7 +194,14 @@ namespace BulkExporterPlugin.Exporters
                         filePath += '.' + format;
                         EnsureDirectoryExists(filePath);
 
-                        textureExporter.Export(texture, filePath, "*." + format);
+                        try
+                        {
+                            textureExporter.Export(texture, filePath, "*." + format);
+                        }
+                        catch (Exception)
+                        {
+                            App.Logger.Log("[Skipping] Failed to export textureAsset: {0}", asset.Name);
+                        }
 
                         task.Update(asset.Name, (progress / (double)total) * 100.0);
                         progress++;
@@ -196,20 +214,27 @@ namespace BulkExporterPlugin.Exporters
                     var audioExporter = new AudioExporter();
                     foreach (EbxAssetEntry asset in assetCollection.Audios)
                     {
-                        IEnumerable<SoundDataTrack> tracks = audioExporter.EnumerateTracks(asset);
-
-                        var trackCounts = tracks.Count();
-                        if (trackCounts == 0)
-                            continue;
-
-                        var filePath = CreateAssetFilePath(path, commonPath, asset.Name, settings.Flatten);
-
-                        foreach (var track in tracks)
+                        try
                         {
-                            var trackPath = filePath + (trackCounts > 1 ? '_' + track.Name : "") + ".wav";
-                            EnsureDirectoryExists(trackPath);
-                            audioExporter.Export(track, trackPath);
-                            task.Update(asset.Name + '_' + track.Name, (progress / (double)total) * 100.0);
+                            IEnumerable<SoundDataTrack> tracks = audioExporter.EnumerateTracks(asset);
+
+                            var trackCounts = tracks.Count();
+                            if (trackCounts == 0)
+                                continue;
+
+                            var filePath = CreateAssetFilePath(path, commonPath, asset.Name, settings.Flatten);
+
+                            foreach (var track in tracks)
+                            {
+                                var trackPath = filePath + (trackCounts > 1 ? '_' + track.Name : "") + ".wav";
+                                EnsureDirectoryExists(trackPath);
+                                audioExporter.Export(track, trackPath);
+                                task.Update(asset.Name + '_' + track.Name, (progress / (double)total) * 100.0);
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            App.Logger.Log("[Skipping] Failed to export audioAsset: {0}", asset.Name);
                         }
 
                         progress++;
