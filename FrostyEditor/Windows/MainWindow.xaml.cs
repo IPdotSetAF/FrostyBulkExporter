@@ -215,11 +215,11 @@ namespace FrostyEditor.Windows
         }
         private void LoadDataExplorerMenuItemExtensions()
         {
-            if (App.PluginManager.DataExplorerContextMenuExtensions.Count() > 0)
+            if (App.PluginManager.DataExplorerContextMenuExtensions.Any(ext => ext.TargetContextMenu == DataExplorerTargetContextMenu.ASSET))
             {
                 dataExplorer.AssetContextMenu.Items.Add(new Separator());
             }
-            
+
             foreach (DataExplorerContextMenuExtension contextItemExtension in App.PluginManager.DataExplorerContextMenuExtensions)
             {
                 MenuItem contextMenuItem = new MenuItem
@@ -229,7 +229,17 @@ namespace FrostyEditor.Windows
                     Command = contextItemExtension.ContextItemClicked,
                     Tag = contextItemExtension
                 };
-                dataExplorer.AssetContextMenu.Items.Add(contextMenuItem);
+
+                if (contextItemExtension.TargetContextMenu == DataExplorerTargetContextMenu.EXPLORER)
+                {
+                    if (dataExplorer.ExplorerContextMenu == null)
+                        dataExplorer.ExplorerContextMenu = new ContextMenu();
+                    dataExplorer.ExplorerContextMenu.Items.Add(contextMenuItem);
+                }
+                else
+                {
+                    dataExplorer.AssetContextMenu.Items.Add(contextMenuItem);
+                }
             }
         }
         private void LoadTabExtensions()

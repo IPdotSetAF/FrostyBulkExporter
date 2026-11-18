@@ -25,5 +25,18 @@ namespace Frosty.Core
 
         public virtual RelayCommand ContextItemClicked { get; }
 
+        /// <summary>
+        /// Gets which data explorer context menu this item is added to: the asset list (default) or the folder tree.
+        /// </summary>
+        public virtual DataExplorerTargetContextMenu TargetContextMenu { get; } = DataExplorerTargetContextMenu.ASSET;
+
+    }
+
+    public enum DataExplorerTargetContextMenu
+    {
+        /// <summary>Folder tree of the data explorer.</summary>
+        EXPLORER,
+        /// <summary>Asset list of the data explorer.</summary>
+        ASSET
     }
 }
