@@ -48,37 +48,63 @@ namespace SoundEditorPlugin.Helpers
         public async Task InitializeAsync()
         {
             await _semaphore.WaitAsync();
-            State = InitializedState.Initializing;
-            Directory.CreateDirectory(BasePath);
-
-            Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ResourceName);
-            ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: false);
-            foreach (ZipArchiveEntry entry in archive.Entries)
+            try
             {
-                Stream entryStream = null;
-                FileStream outputStream = null;
+                if (State == InitializedState.Initialized)
+                    return;
 
-                try
+                State = InitializedState.Initializing;
+                Directory.CreateDirectory(BasePath);
+
+                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(ResourceName))
+                using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: false))
                 {
-                    entryStream = entry.Open();
-                    string outputPath = Path.Combine(BasePath, entry.Name);
-                    if (!File.Exists(outputPath))
+                    foreach (ZipArchiveEntry entry in archive.Entries)
                     {
-                        outputStream = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.Read);
-                        await entryStream.CopyToAsync(outputStream).ConfigureAwait(continueOnCapturedContext: false);
+                        string outputPath = Path.Combine(BasePath, entry.Name);
+                        if (File.Exists(outputPath))
+                            continue;
+
+                        // extract to a temp name first, so a failed extraction never leaves a truncated exe behind
+                        string partialPath = outputPath + ".partial";
+                        using (Stream entryStream = entry.Open())
+                        using (FileStream outputStream = new FileStream(partialPath, FileMode.Create, FileAccess.Write, FileShare.Read))
+                        {
+                            await entryStream.CopyToAsync(outputStream).ConfigureAwait(continueOnCapturedContext: false);
+                        }
+                        File.Move(partialPath, outputPath);
                     }
                 }
-                finally
-                {
-                    entryStream?.Dispose();
-                    outputStream?.Dispose();
-                }
-            }
 
-            State = InitializedState.Initialized;
-            archive.Dispose();
-            stream.Dispose();
-            _semaphore.Release();
+                State = InitializedState.Initialized;
+            }
+            catch
+            {
+                // allow a later retry instead of leaving every caller waiting on a dead initialization
+                State = InitializedState.NotInitialized;
+                throw;
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+
+        private readonly object _initLock = new object();
+        private Task _initTask;
+
+        /// <summary>
+        /// Starts the initialization once (thread-safe) and returns it. A failed initialization is retried
+        /// on the next call. Callers that must not block forever should wait on the returned task with a timeout.
+        /// </summary>
+        public Task EnsureInitializedAsync()
+        {
+            lock (_initLock)
+            {
+                if (_initTask == null || _initTask.IsFaulted || _initTask.IsCanceled)
+                    _initTask = Task.Run(() => InitializeAsync());
+                return _initTask;
+            }
         }
         public async Task WaitForSemaphore()
         {

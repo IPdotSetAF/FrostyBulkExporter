@@ -239,6 +239,12 @@ namespace SoundEditorPlugin
         private double progress;
         public double Progress { get => progress; set { progress = value; NotifyPropertyChanged(); } }
 
+        /// <summary>
+        /// Set by <see cref="SoundDecoder"/> when the track could not be decoded completely
+        /// (missing chunk, unsupported codec in a segment, empty decoder output, ...). Null when complete.
+        /// </summary>
+        public string DecodeProblem { get; set; }
+
 
         public event PropertyChangedEventHandler PropertyChanged;
         private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")

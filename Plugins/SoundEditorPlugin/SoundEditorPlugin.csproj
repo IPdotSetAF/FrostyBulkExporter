@@ -94,6 +94,20 @@
     <ProjectReference Include="..\..\FrostySdk\FrostySdk.csproj">
       <Private>false</Private>
     </ProjectReference>
+    <!-- worker process for the native EALayer3 decoder: built first, then embedded below (not referenced as an assembly) -->
+    <ProjectReference Include="..\EALayer3Host\EALayer3Host.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <Private>false</Private>
+      <SetConfiguration>Configuration=Release</SetConfiguration>
+      <SetPlatform>Platform=AnyCPU</SetPlatform>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\EALayer3Host\bin\EALayer3Host.exe">
+      <LogicalName>SoundEditorPlugin.Resources.EALayer3Host.exe</LogicalName>
+      <Link>Resources\EALayer3Host.exe</Link>
+    </EmbeddedResource>
   </ItemGroup>
   
   <ItemGroup>
