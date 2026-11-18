@@ -1,7 +1,4 @@
-﻿using Frosty.Core;
-using FrostySdk.Ebx;
-using FrostySdk.IO;
-using FrostySdk.Managers;
+﻿using FrostySdk.Managers.Entries;
 using SoundEditorPlugin;
 using System.Collections.Generic;
 using System.IO;
@@ -9,387 +6,108 @@ using WAV = SoundEditorPlugin.WAV;
 
 namespace BulkExporterPlugin.Exporters
 {
+    /// <summary>
+    /// Audio side of the bulk exporter. Decoding is delegated to <see cref="SoundDecoder"/> (SoundEditorPlugin),
+    /// so bulk export follows the same codec support as the sound editor (EA-Opus, multistream Opus, ...).
+    /// </summary>
     public class AudioExporter
     {
-        public static string[] assetTypes = { "SoundWaveAsset", "NewWaveAsset", "LocalizedWaveAsset", "HarmonySampleBankAsset" };
+        /// <summary>
+        /// Base sound types. Enumeration and filtering match them with inheritance, so derived types
+        /// such as LocalizedWaveAsset (a SoundWaveAsset) are included without being listed.
+        /// </summary>
+        public static string[] assetTypes = SoundDecoder.SupportedAssetTypes;
 
-        public IEnumerable<SoundDataTrack> EnumerateTracks(EbxAssetEntry asset)
+        private readonly SoundDecoder.Options m_options;
+
+        public AudioExporter(SoundDecoder.Options options)
         {
-            EbxAsset ebxAsset = App.AssetManager.GetEbx(asset);
-            var soundAsset =  (dynamic)ebxAsset.RootObject;
-
-            switch (asset.Type)
-            {
-                case "SoundWaveAsset":
-                    return EnumerateSoundWaveAssetTracks(soundAsset);
-                case "NewWaveAsset":
-                case "LocalizedWaveAsset":
-                    return EnumerateNewWavAssetTracks(soundAsset);
-                case "HarmonySampleBankAsset":
-                    return EnumerateHarmonySampleBankAssetTracks(soundAsset);
-                default:
-                    return new List<SoundDataTrack>();
-            }
+            m_options = options;
         }
 
-        private IEnumerable<SoundDataTrack> EnumerateSoundWaveAssetTracks(dynamic soundWave)
-        {
-            List<SoundDataTrack> tracks = new List<SoundDataTrack>();
+        public List<SoundDataTrack> EnumerateTracks(EbxAssetEntry asset) => SoundDecoder.Decode(asset, m_options);
 
-            int index = 0;
-
-            foreach (dynamic runtimeVariation in soundWave.RuntimeVariations)
-            {
-                SoundDataTrack track = new SoundDataTrack { Name = "Track #" + ((index++) + 1) };
-
-                dynamic soundDataChunk = soundWave.Chunks[runtimeVariation.ChunkIndex];
-                ChunkAssetEntry chunkEntry = App.AssetManager.GetChunkEntry(soundDataChunk.ChunkId);
-
-                if (chunkEntry == null)
-                {
-                    App.Logger.LogWarning($"SoundChunk {soundDataChunk.ChunkId} doesn't exist. This could be because its a LocalizedChunk that is not loaded by your game.");
-                }
-                else
-                {
-                    using (NativeReader reader = new NativeReader(App.AssetManager.GetChunk(chunkEntry)))
-                    {
-                        List<short> decodedSoundBuf = new List<short>();
-                        double startLoopingTime = 0.0;
-                        double loopingDuration = 0.0;
-
-                        for (int i = 0; i < runtimeVariation.SegmentCount; i++)
-                        {
-                            var segment = soundWave.Segments[runtimeVariation.FirstSegmentIndex + i];
-                            reader.Position = segment.SamplesOffset;
-
-                            uint headerSize = reader.ReadUInt(Endian.Big) & 0x00ffffff;
-                            byte codec = reader.ReadByte();
-                            int channels = (reader.ReadByte() >> 2) + 1;
-                            ushort sampleRate = reader.ReadUShort(Endian.Big);
-                            uint sampleCount = reader.ReadUInt(Endian.Big) & 0x00ffffff;
-
-                            switch (codec)
-                            {
-                                case 0x12: track.Codec = "Pcm16Big"; break;
-                                case 0x14: track.Codec = "Xas1"; break;
-                                case 0x15: track.Codec = "EaLayer31"; break;
-                                case 0x16: track.Codec = "EaLayer32Pcm"; break;
-                                default: track.Codec = "Unknown (" + codec.ToString("x2") + ")"; break;
-                            }
-
-                            reader.Position = segment.SamplesOffset;
-                            long size = reader.Length - reader.Position;
-                            if ((runtimeVariation.FirstSegmentIndex + i + 1 < soundWave.Segments.Count) && ((soundWave.Segments[runtimeVariation.FirstSegmentIndex + i + 1].SamplesOffset > segment.SamplesOffset)))
-                            {
-                                size = soundWave.Segments[runtimeVariation.FirstSegmentIndex + i + 1].SamplesOffset - reader.Position;
-                            }
-                            byte[] soundBuf = reader.ReadBytes((int)size);
-                            double duration = 0.0;
-
-                            if (codec == 0x12)
-                            {
-                                short[] data = Pcm16b.Decode(soundBuf);
-                                decodedSoundBuf.AddRange(data);
-                                duration += (data.Length / channels) / (double)sampleRate;
-                                sampleCount = (uint)data.Length;
-                            }
-                            else if (codec == 0x14)
-                            {
-                                short[] data = XAS.Decode(soundBuf);
-                                decodedSoundBuf.AddRange(data);
-                                duration += (data.Length / channels) / (double)sampleRate;
-                                sampleCount = (uint)data.Length;
-                            }
-                            else if (codec == 0x15 || codec == 0x16)
-                            {
-                                sampleCount = 0;
-                                EALayer3.Decode(soundBuf, soundBuf.Length, (short[] data, int count, EALayer3.StreamInfo info) =>
-                                {
-                                    if (info.streamIndex == -1)
-                                        return;
-                                    sampleCount += (uint)data.Length;
-                                    decodedSoundBuf.AddRange(data);
-                                });
-                                duration += (sampleCount / channels) / (double)sampleRate;
-                            }
-
-                            if (runtimeVariation.SegmentCount > 1)
-                            {
-                                if (i < runtimeVariation.FirstLoopSegmentIndex)
-                                {
-                                    startLoopingTime += duration;
-                                    track.LoopStart += sampleCount;
-                                }
-                                if (i >= runtimeVariation.FirstLoopSegmentIndex && i <= runtimeVariation.LastLoopSegmentIndex)
-                                {
-                                    loopingDuration += duration;
-                                    track.LoopEnd += sampleCount;
-                                }
-                            }
-
-                            track.SampleRate = sampleRate;
-                            track.ChannelCount = channels;
-                            track.Duration += duration;
-                        }
-
-                        track.LoopEnd += track.LoopStart;
-                        track.Samples = decodedSoundBuf.ToArray();
-
-                        track.SegmentCount = runtimeVariation.SegmentCount;
-                    }
-                }
-
-                tracks.Add(track);
-            }
-
-            foreach (dynamic localization in soundWave.Localization)
-            {
-                for (int i = 0; i < localization.VariationCount; i++)
-                {
-                    SoundDataTrack track = tracks[i + localization.FirstVariationIndex];
-
-                    PointerRef pr = localization.Language;
-                    EbxAsset asset2 = App.AssetManager.GetEbx(App.AssetManager.GetEbxEntry(pr.External.FileGuid));
-                    dynamic obj = asset2.GetObject(pr.External.ClassGuid);
-
-                    track.Language = obj.__Id;
-                }
-            }
-
-            return tracks;
-        }
-
-        private IEnumerable<SoundDataTrack> EnumerateNewWavAssetTracks(dynamic newWave)
-        {
-            List<SoundDataTrack> tracks = new List<SoundDataTrack>();
-
-            int index = 0;
-            foreach (dynamic soundDataChunk in newWave.Chunks)
-            {
-                SoundDataTrack track = new SoundDataTrack { Name = "Track #" + ((index++) + 1) };
-
-                ChunkAssetEntry chunkEntry = App.AssetManager.GetChunkEntry(soundDataChunk.ChunkId);
-
-                if (chunkEntry == null)
-                {
-                    App.Logger.LogWarning($"SoundChunk {soundDataChunk.ChunkId} doesn't exist. This could be because its a LocalizedChunk that is not loaded by your game.");
-                }
-                else
-                {
-                    using (NativeReader reader = new NativeReader(App.AssetManager.GetChunk(chunkEntry)))
-                    {
-                        List<short> decodedSoundBuf = new List<short>();
-                        reader.Position = 0;
-
-                        uint headerSize = reader.ReadUInt(Endian.Big) & 0x00ffffff;
-                        byte codec = reader.ReadByte();
-                        int channels = (reader.ReadByte() >> 2) + 1;
-                        ushort sampleRate = reader.ReadUShort(Endian.Big);
-                        uint sampleCount = reader.ReadUInt(Endian.Big) & 0x00ffffff;
-
-                        switch (codec)
-                        {
-                            case 0x12: track.Codec = "Pcm16Big"; break;
-                            case 0x14: track.Codec = "Xas1"; break;
-                            case 0x15: track.Codec = "EaLayer31"; break;
-                            case 0x16: track.Codec = "EaLayer32Pcm"; break;
-                            case 0x1c: track.Codec = "EaOpus"; break;
-                            default: track.Codec = "Unknown (" + codec.ToString("x2") + ")"; break;
-                        }
-
-                        reader.Position = 0;
-                        byte[] soundBuf = reader.ReadToEnd();
-                        double duration = 0.0;
-
-                        if (codec == 0x12)
-                        {
-                            short[] data = Pcm16b.Decode(soundBuf);
-                            decodedSoundBuf.AddRange(data);
-                            duration += (data.Length / channels) / (double)sampleRate;
-                        }
-                        else if (codec == 0x14)
-                        {
-                            short[] data = XAS.Decode(soundBuf);
-                            decodedSoundBuf.AddRange(data);
-                            duration += (data.Length / channels) / (double)sampleRate;
-                        }
-                        else if (codec == 0x15 || codec == 0x16 || codec == 0x1c)
-                        {
-                            sampleCount = 0;
-                            EALayer3.Decode(soundBuf, soundBuf.Length, (short[] data, int count, EALayer3.StreamInfo info) =>
-                            {
-                                if (info.streamIndex == -1)
-                                    return;
-                                sampleCount += (uint)data.Length;
-                                decodedSoundBuf.AddRange(data);
-                            });
-                            duration += (sampleCount / channels) / (double)sampleRate;
-                        }
-
-                        track.SampleRate = sampleRate;
-                        track.ChannelCount = channels;
-                        track.Duration += duration;
-                        track.Samples = decodedSoundBuf.ToArray();
-
-                        track.SegmentCount = 1;
-                    }
-                }
-
-                tracks.Add(track);
-            }
-
-            return tracks;
-        }
-
-        private IEnumerable<SoundDataTrack> EnumerateHarmonySampleBankAssetTracks(dynamic soundWave)
-        {
-            List<SoundDataTrack> tracks = new List<SoundDataTrack>();
-
-            dynamic ramChunk = soundWave.Chunks[soundWave.RamChunkIndex];
-
-
-            int index = 0;
-
-            ChunkAssetEntry ramChunkEntry = App.AssetManager.GetChunkEntry(ramChunk.ChunkId);
-
-
-            NativeReader streamChunkReader = null;
-            if (soundWave.StreamChunkIndex != 255)
-            {
-                dynamic streamChunk = soundWave.Chunks[soundWave.StreamChunkIndex];
-                ChunkAssetEntry streamChunkEntry = App.AssetManager.GetChunkEntry(streamChunk.ChunkId);
-                streamChunkReader = new NativeReader(App.AssetManager.GetChunk(streamChunkEntry));
-            }
-
-            using (NativeReader reader = new NativeReader(App.AssetManager.GetChunk(ramChunkEntry)))
-            {
-                reader.Position = 0x0a;
-                int datasetCount = reader.ReadUShort();
-
-                reader.Position = 0x20;
-                int dataOffset = reader.ReadInt();
-
-                reader.Position = 0x50;
-                List<int> offsets = new List<int>();
-                for (int i = 0; i < datasetCount; i++)
-                {
-                    offsets.Add(reader.ReadInt());
-                    reader.Position += 4;
-                }
-
-                foreach (int offset in offsets)
-                {
-                    reader.Position = offset + 0x3c;
-                    int blockCount = reader.ReadUShort();
-                    reader.Position += 0x0a;
-
-                    int fileOffset = -1;
-                    bool streaming = false;
-
-                    for (int i = 0; i < blockCount; i++)
-                    {
-                        uint blockType = reader.ReadUInt();
-                        if (blockType == 0x2e4f4646)
-                        {
-                            reader.Position += 4;
-                            fileOffset = reader.ReadInt();
-                            reader.Position += 0x0c;
-
-                            streaming = true;
-                        }
-                        else if (blockType == 0x2e52414d)
-                        {
-                            reader.Position += 4;
-                            fileOffset = reader.ReadInt() + dataOffset;
-                            reader.Position += 0x0c;
-                        }
-                        else
-                        {
-                            reader.Position += 0x14;
-                        }
-                    }
-
-                    if (fileOffset != -1)
-                    {
-                        NativeReader actualReader = reader;
-                        if (streaming)
-                            actualReader = streamChunkReader;
-
-                        SoundDataTrack track = new SoundDataTrack { Name = "Track #" + (index++) };
-
-                        actualReader.Position = fileOffset;
-                        List<short> decodedSoundBuf = new List<short>();
-
-                        uint headerSize = actualReader.ReadUInt(Endian.Big) & 0x00ffffff;
-                        byte codec = actualReader.ReadByte();
-                        int channels = (actualReader.ReadByte() >> 2) + 1;
-                        ushort sampleRate = actualReader.ReadUShort(Endian.Big);
-                        uint sampleCount = actualReader.ReadUInt(Endian.Big) & 0x00ffffff;
-
-                        switch (codec)
-                        {
-                            case 0x14: track.Codec = "XAS"; break;
-                            case 0x15: track.Codec = "EALayer3 v5"; break;
-                            case 0x16: track.Codec = "EALayer3 v6"; break;
-                            default: track.Codec = "Unknown (" + codec.ToString("x2") + ")"; break;
-                        }
-
-                        actualReader.Position = fileOffset;
-                        byte[] soundBuf = actualReader.ReadToEnd();
-                        double duration = 0.0;
-
-                        if (codec == 0x14)
-                        {
-                            short[] data = XAS.Decode(soundBuf);
-                            decodedSoundBuf.AddRange(data);
-                            duration += (data.Length / channels) / (double)sampleRate;
-                        }
-                        else if (codec == 0x15 || codec == 0x16)
-                        {
-                            sampleCount = 0;
-                            EALayer3.Decode(soundBuf, soundBuf.Length, (short[] data, int count, EALayer3.StreamInfo info) =>
-                            {
-                                if (info.streamIndex == -1)
-                                    return;
-                                sampleCount += (uint)data.Length;
-                                decodedSoundBuf.AddRange(data);
-                            });
-                            duration += (sampleCount / channels) / (double)sampleRate;
-                        }
-
-                        track.Duration += duration;
-                        track.Samples = decodedSoundBuf.ToArray();
-
-                        track.SegmentCount = 1;
-                        tracks.Add(track);
-                    }
-                }
-            }
-
-            return tracks;
-        }
-
+        /// <summary>
+        /// Writes the track as a 16-bit PCM WAV. Samples are streamed straight to disk (no per-frame objects,
+        /// so long sounds do not exhaust memory). The file is written under a temporary name and renamed at the
+        /// end, so a failure never leaves a truncated WAV behind.
+        /// </summary>
         public void Export(SoundDataTrack track, string fileName)
         {
-            WAV.WAVFormatChunk fmt = new WAV.WAVFormatChunk(WAV.WAVFormatChunk.DataFormats.WAVE_FORMAT_PCM, (ushort)track.ChannelCount, (uint)track.SampleRate, (uint)(track.ChannelCount * 2 * track.SampleRate), (ushort)(2 * track.ChannelCount), 16);
-            List<WAV.WAVDataFrame> frames = new List<WAV.WAVDataFrame>();
-            for (int i = 0; i < track.Samples.Length / track.ChannelCount; i++)
-            {
-                // write frame
-                WAV.WAV16BitDataFrame frame = new WAV.WAV16BitDataFrame((ushort)track.ChannelCount);
-                for (int channel = 0; channel < track.ChannelCount; channel++)
-                {
-                    frame.Data[channel] = track.Samples[i * track.ChannelCount + channel];
-                }
-                frames.Add(frame);
-            }
-            WAV.WAVDataChunk data = new WAV.WAVDataChunk(fmt, frames);
-            WAV.RIFFMainChunk main = new WAV.RIFFMainChunk(new WAV.RIFFChunkHeader(0, new byte[] { 0x52, 0x49, 0x46, 0x46 }, 0), new byte[] { 0x57, 0x41, 0x56, 0x45 });
+            int channels = track.ChannelCount;
+            int sampleRate = track.SampleRate;
+            if (channels <= 0 || sampleRate <= 0)
+                throw new InvalidDataException($"{track.Name}: invalid format ({channels} channels, {sampleRate} Hz)");
 
-            using (FileStream stream = new FileStream(fileName, FileMode.Create))
-            using (BinaryWriter writer = new BinaryWriter(stream))
+            // only whole frames are written
+            long frameCount = track.Samples.Length / channels;
+            long dataSize = frameCount * channels * 2;
+            if (dataSize > uint.MaxValue - 60)
+                throw new InvalidDataException($"{track.Name}: too long for a WAV file");
+
+            string tempFileName = fileName + ".partial";
+            try
             {
-                main.Write(writer, new List<WAV.IRIFFChunk>(new WAV.IRIFFChunk[] { fmt, data }));
+                using (FileStream stream = new FileStream(tempFileName, FileMode.Create, FileAccess.Write, FileShare.None, 1 << 16))
+                using (BinaryWriter writer = new BinaryWriter(stream))
+                {
+                    // more than 2 channels: WAVE_FORMAT_EXTENSIBLE with a speaker mask, as the WAV spec requires
+                    // (plain PCM is rejected or read as stereo by some Windows players and tools)
+                    bool extensible = channels > 2;
+                    uint fmtSize = extensible ? 40u : 16u;
+
+                    writer.Write(new byte[] { 0x52, 0x49, 0x46, 0x46 }); // RIFF
+                    writer.Write((uint)(4 + 8 + fmtSize + 8 + dataSize));
+                    writer.Write(new byte[] { 0x57, 0x41, 0x56, 0x45 }); // WAVE
+
+                    writer.Write(new byte[] { 0x66, 0x6d, 0x74, 0x20 }); // "fmt "
+                    writer.Write(fmtSize);
+                    writer.Write(extensible ? (ushort)0xFFFE : (ushort)1); // EXTENSIBLE or PCM
+                    writer.Write((ushort)channels);
+                    writer.Write((uint)sampleRate);
+                    writer.Write((uint)(sampleRate * channels * 2));
+                    writer.Write((ushort)(channels * 2));
+                    writer.Write((ushort)16);
+                    if (extensible)
+                    {
+                        writer.Write((ushort)22);         // cbSize
+                        writer.Write((ushort)16);         // valid bits per sample
+                        writer.Write(SpeakerMask(channels));
+                        // KSDATAFORMAT_SUBTYPE_PCM {00000001-0000-0010-8000-00AA00389B71}
+                        writer.Write(new byte[] { 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71 });
+                    }
+
+                    writer.Write(new byte[] { 0x64, 0x61, 0x74, 0x61 }); // data
+                    writer.Write((uint)dataSize);
+
+                    long sampleCount = frameCount * channels;
+                    for (long i = 0; i < sampleCount; i++)
+                        writer.Write(track.Samples[i]);
+                }
+
+                if (File.Exists(fileName))
+                    File.Delete(fileName);
+                File.Move(tempFileName, fileName);
+            }
+            finally
+            {
+                if (File.Exists(tempFileName))
+                    File.Delete(tempFileName);
+            }
+        }
+
+        /// <summary>
+        /// Speaker positions for the channel order of EA multichannel sounds (stream pairs FL FR, FC LFE, BL BR;
+        /// same table as the sound editor). Other counts get 0 (no assigned positions).
+        /// </summary>
+        private static uint SpeakerMask(int channels)
+        {
+            switch (channels)
+            {
+                case 4: return 0x1 | 0x2 | 0x10 | 0x20;                    // FL FR BL BR
+                case 6: return 0x1 | 0x2 | 0x4 | 0x8 | 0x10 | 0x20;        // FL FR FC LFE BL BR
+                case 8: return 0x1 | 0x2 | 0x4 | 0x8 | 0x10 | 0x20 | 0x200 | 0x400; // + SL SR
+                default: return 0;
             }
         }
     }

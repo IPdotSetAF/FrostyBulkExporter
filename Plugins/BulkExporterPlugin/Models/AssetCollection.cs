@@ -1,4 +1,4 @@
-﻿using FrostySdk.Managers;
+﻿using FrostySdk.Managers.Entries;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,6 +10,14 @@ namespace BulkExporterPlugin.Models
         public IEnumerable<EbxAssetEntry> SkinnedMeshes { get; set; }
         public IEnumerable<EbxAssetEntry> Textures { get; set; }
         public IEnumerable<EbxAssetEntry> Audios { get; set; }
+
+        public static AssetCollection Empty() => new AssetCollection
+        {
+            Meshes = new List<EbxAssetEntry>(),
+            SkinnedMeshes = new List<EbxAssetEntry>(),
+            Textures = new List<EbxAssetEntry>(),
+            Audios = new List<EbxAssetEntry>(),
+        };
 
         public AssetCount GetCounts()
         {

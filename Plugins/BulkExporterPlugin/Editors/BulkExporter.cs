@@ -1,5 +1,6 @@
 ﻿using FrostySdk.Interfaces;
 using FrostySdk.Managers;
+using FrostySdk.Managers.Entries;
 using System;
 using System.IO;
 using System.Windows;
@@ -262,7 +263,8 @@ namespace BulkExporterPlugin.Editors
             _selectedDataExplorer.ItemsSource = FilterAssets(_selectedAssets, _assetTypefilter);
         }
 
+        // matched with inheritance so derived types (e.g. LocalizedWaveAsset) stay visible
         private IEnumerable<EbxAssetEntry> FilterAssets(IEnumerable<EbxAssetEntry> assets, string[] assetTypes) =>
-            assets.Where(asset => assetTypes.Contains(asset.Type));
+            assets.Where(asset => Exporter.IsOfType(asset.Type, assetTypes));
     }
 }

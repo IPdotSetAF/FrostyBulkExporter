@@ -5,7 +5,7 @@
     <TargetFrameworks>net48</TargetFrameworks>
     <AssemblyTitle>BulkExporterPlugin</AssemblyTitle>
     <Product>BulkExporterPlugin</Product>
-    <Copyright>Copyright ©  2024</Copyright>
+    <Copyright>Copyright ©  2024-2026</Copyright>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <UseWPF>true</UseWPF>
@@ -37,7 +37,7 @@
   </PropertyGroup>
   
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy /Y $(TargetPath) $(SolutionDir)$(OutDir)Plugins\" />
+    <Exec Command="xcopy /Y &quot;$(TargetPath)&quot; &quot;$(SolutionDir)$(OutDir)Plugins\&quot;" />
   </Target>
   
   <ItemGroup>
@@ -61,9 +61,15 @@
     <ProjectReference Include="..\..\FrostySdk\FrostySdk.csproj">
       <Private>false</Private>
     </ProjectReference>
-    <ProjectReference Include="..\MeshSetPlugin\MeshSetPlugin.csproj" />
-    <ProjectReference Include="..\SoundEditorPlugin\SoundEditorPlugin.csproj" />
-    <ProjectReference Include="..\TexturePlugin\TexturePlugin.csproj" />
+    <ProjectReference Include="..\MeshSetPlugin\MeshSetPlugin.csproj">
+      <Private>false</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\SoundEditorPlugin\SoundEditorPlugin.csproj">
+      <Private>false</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\TexturePlugin\TexturePlugin.csproj">
+      <Private>false</Private>
+    </ProjectReference>
   </ItemGroup>
   
   <ItemGroup>
