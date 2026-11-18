@@ -304,6 +304,16 @@ namespace Frosty.Core.Controls
         }
         #endregion
 
+        #region -- ExplorerContextMenu --
+        // Context menu shown on folders of the asset tree (see DataExplorerTargetContextMenu.EXPLORER).
+        public static readonly DependencyProperty ExplorerContextMenuProperty = DependencyProperty.Register(nameof(ExplorerContextMenu), typeof(ContextMenu), typeof(FrostyDataExplorer), new FrameworkPropertyMetadata(null));
+        public ContextMenu ExplorerContextMenu
+        {
+            get => (ContextMenu)GetValue(ExplorerContextMenuProperty);
+            set => SetValue(ExplorerContextMenuProperty, value);
+        }
+        #endregion
+
         #region -- ToolbarVisible --
         public static readonly DependencyProperty ToolbarVisibleProperty = DependencyProperty.Register(nameof(ToolbarVisible), typeof(bool), typeof(FrostyDataExplorer), new FrameworkPropertyMetadata(true));
         public bool ToolbarVisible
@@ -446,6 +456,7 @@ namespace Frosty.Core.Controls
             m_assetListView = GetTemplateChild(PART_AssetListView) as ListView;
 
             m_assetTreeView.SelectedItemChanged += assetTreeView_SelectedItemChanged;
+            m_assetTreeView.PreviewMouseRightButtonDown += assetTreeView_PreviewMouseRightButtonDown;
             m_filterTextBox.KeyUp += FilterTextBox_KeyUp;
             m_filterTextBox.LostFocus += FilterTextBox_LostFocus;
             m_assetListView.SelectionChanged += assetListView_SelectionChanged;
@@ -647,6 +658,29 @@ namespace Frosty.Core.Controls
             SelectedPath = string.IsNullOrEmpty(m_selectedPath?.FullPath) ? "" : m_selectedPath.FullPath.Remove(0, 1);
 
             UpdateListView(m_selectedPath);
+        }
+
+        // Right-clicking a folder selects it first, so folder context menu items (ExplorerContextMenu) act on the clicked folder.
+        private void assetTreeView_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            TreeViewItem item = FindAncestorTreeViewItem(e.OriginalSource as DependencyObject);
+            if (item != null)
+            {
+                item.IsSelected = true;
+                item.Focus();
+            }
+        }
+
+        private static TreeViewItem FindAncestorTreeViewItem(DependencyObject source)
+        {
+            while (source != null && !(source is TreeViewItem))
+            {
+                source = (source is Visual || source is System.Windows.Media.Media3D.Visual3D)
+                    ? VisualTreeHelper.GetParent(source)
+                    : LogicalTreeHelper.GetParent(source);
+            }
+
+            return source as TreeViewItem;
         }
 
         private void ClearFilter()
